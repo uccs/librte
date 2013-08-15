@@ -1,0 +1,2 @@
+-modex_test
+    stcirun -n X modex_test

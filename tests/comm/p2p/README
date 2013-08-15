@@ -1,0 +1,5 @@
+-p2p
+    stcirun -n X p2p
+
+-persistent_request
+    stcirun -n X persistent_request
