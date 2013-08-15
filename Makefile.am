@@ -5,6 +5,6 @@ ACLOCAL_AMFLAGS = -I autoconf/m4
 bin_PROGRAMS =
 
 include src/Makefile.mk
-if WITH_TESTS
+if WITH_RTE_TESTS
 include tests/Makefile.mk
 endif
