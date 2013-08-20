@@ -95,7 +95,7 @@ RTE_PUBLIC int rte_orte_init(int *argc, char ***argv, rte_group_t *out_group)
     hook_debugger();
     */
 
-    rc = all_proc_init();
+    rc = all_orte_proc_init();
     if (RTE_SUCCESS != rc) {
         return RTE_ERROR;
     }
