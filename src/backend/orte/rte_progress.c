@@ -19,7 +19,7 @@
  * FIXME: Statuses are not handled in the moment.
  */
 
-inline void rte_orte_progress (void) {
+void rte_orte_progress (void) {
     if (!opal_using_threads()) 
         opal_progress();
 }
