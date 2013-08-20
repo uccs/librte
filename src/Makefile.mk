@@ -3,6 +3,7 @@
 
 lib_LTLIBRARIES =
 librte_BACKENDS =
+librte_BACKEND_LIBS =
 
 CFLAGS += -I ${srcdir}/include
 

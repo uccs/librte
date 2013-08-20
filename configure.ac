@@ -40,7 +40,7 @@ AM_CONDITIONAL([WITH_RTE_TESTS], [test x$with_tests = xyes])
 LIBOPENRTE=
 AS_IF([test "x$use_orte" != xno],
       [AC_CHECK_LIB([open-rte], [orte_init],
-      [AC_SUBST([LIBOPENRTE], ["-lopen-rte -lopen_pal"])
+      [AC_SUBST([LIBOPENRTE], ["-lopen-rte "])
        AC_DEFINE([HAVE_ORTE], [1], [Define if we have ORTE])
       ],
       [AC_MSG_FAILURE([--with-orte was given, but test for orte failed])],
