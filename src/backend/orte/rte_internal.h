@@ -19,6 +19,6 @@ OBJ_CLASS_DECLARATION(rte_proc_t);
 
 extern opal_pointer_array_t rte_procs;
 
-int all_proc_init(void);
-int all_proc_release(void);
+int all_orte_proc_init(void);
+int all_orte_proc_release(void);
 #endif

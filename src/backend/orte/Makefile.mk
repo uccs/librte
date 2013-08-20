@@ -1,8 +1,5 @@
 # Copyright (c) 2009-2010 UT-Battelle, LLC. All rights reserved.
 
-if HAVE_ORTE
-librte_BACKENDS += librte-orte.la
-endif
 librte_orte_la_SOURCES = \
           src/backend/orte/rte_init.c \
           src/backend/orte/rte_group_rank.c \
@@ -17,7 +14,7 @@ librte_orte_la_SOURCES = \
           src/backend/orte/rte_abort.c \
           src/backend/orte/rte_progress.c \
           src/backend/orte/rte_modex.c \
-          src/backend/orte/rte_finilize.c \
+          src/backend/orte/rte_finalize.c \
           src/backend/orte/rte_dt.h \
           src/backend/orte/rte_dt.c \
           src/backend/orte/rte_internal.h \
@@ -31,7 +28,12 @@ librte_orte_la_SOURCES = \
 
 librte_orte_la_CFLAGS=-I ${srcdir}/src/backend/orte -I ${srcdir}/include
 
-librte_orte_la_LIBADD = LIBOPENRTE
+librte_orte_la_LIBADD = ${LIBOPENRTE}
+
+if HAVE_ORTE
+librte_BACKENDS += librte-orte.la
+librte_BACKEND_LIBS += ${LIBOPENRTE}
+endif
 
 librte_orte_la_DEPENDENCIES =
 

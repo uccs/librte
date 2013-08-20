@@ -16,7 +16,9 @@ static void rte_orte_proc_construct(rte_proc_t* proc)
 
 static void rte_orte_proc_destruct(rte_proc_t* proc)
 {
-    free(proc->hostname);
+    if (NULL != proc && NULL != proc->hostname) {
+       free(proc->hostname);
+    }
 }
 
 OBJ_CLASS_INSTANCE(
@@ -52,7 +54,7 @@ int all_orte_proc_init(void)
         proc->name.vpid = i;
 
         if (i == orte_process_info.my_name.vpid) {
-            proc->hostname = orte_process_info.nodename;
+            proc->hostname = strdup(orte_process_info.nodename);
         } else {
             rc = opal_db.fetch_pointer((opal_identifier_t*)&(proc->name), 
                     ORTE_DB_HOSTNAME, 
@@ -97,5 +99,6 @@ int all_orte_proc_release(void)
         }
     }
     OBJ_DESTRUCT(&rte_procs);
+
     return RTE_SUCCESS;
 }
