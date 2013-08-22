@@ -38,14 +38,30 @@ AM_CONDITIONAL([WITH_RTE_TESTS], [test x$with_tests = xyes])
 # Checks for libraries.
 
 LIBOPENRTE=
+LIBORTE_PATH=$use_orte/lib
+
+LDFLAGS_SAVE=$LDFLAGS
+
 AS_IF([test "x$use_orte" != xno],
-      [AC_CHECK_LIB([open-rte], [orte_init],
-      [AC_SUBST([LIBOPENRTE], ["-lopen-rte "])
-       AC_DEFINE([HAVE_ORTE], [1], [Define if we have ORTE])
-      ],
-      [AC_MSG_FAILURE([--with-orte was given, but test for orte failed])],
+      [AS_IF([test "x$use_orte" != "xyes"],
+              [LDFLAGS="-L$use_orte/lib"
+               orte_path=$use_orte
+               AC_SUBST([LIBRTE_ORTE_LDFLAGS], ["-L$orte_path/lib"])
+               AS_ECHO(["AS_ESCAPE(["x$use_orte" = ])AS_ESCAPE(["x$use_orte"], [""])"])
+              ],[
+               orte_path=""
+              ])
+       AC_CHECK_LIB([open-rte], [orte_init],
+       [
+        AC_SUBST([LIBRTE_ORTE_CFLAGS],
+                 ["-I$orte_path/include -I$orte_path/include/openmpi -I$orte_path/include/openmpi/opal/mca/hwloc/hwloc152/hwloc/include -I$orte_path/include/openmpi/opal/mca/event/libevent2021/libevent"])
+        AC_SUBST([LIBRTE_ORTE_LIBADD],["-lopen-rte"])
+        AC_DEFINE([HAVE_ORTE], [1], [Define if we have ORTE])
+       ],
+       [AC_MSG_FAILURE([--with-orte was given, but test for orte failed])],
       [""])])
-AM_CONDITIONAL([HAVE_ORTE], [test x$use_orte = xyes])
+AM_CONDITIONAL([HAVE_ORTE], [test "x$use_orte" != xno])
+LDFLAGS=$LDFLAGS_SAVE
 
 LIBSTCI=
 AS_IF([test "x$use_stci" != xno],

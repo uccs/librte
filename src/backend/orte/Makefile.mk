@@ -1,5 +1,9 @@
 # Copyright (c) 2009-2010 UT-Battelle, LLC. All rights reserved.
 
+if HAVE_ORTE
+librte_BACKENDS += librte-orte.la
+librte_BACKEND_LIBS += ${LIBRTE_ORTE_LIBADD}
+
 librte_orte_la_SOURCES = \
           src/backend/orte/rte_init.c \
           src/backend/orte/rte_group_rank.c \
@@ -26,16 +30,7 @@ librte_orte_la_SOURCES = \
           src/backend/orte/coll/rte_barrier.c \
           src/backend/orte/rte_group_index_to_ec.c
 
-librte_orte_la_CFLAGS=-I ${srcdir}/src/backend/orte -I ${srcdir}/include
-
-librte_orte_la_LIBADD = ${LIBOPENRTE}
-
-if HAVE_ORTE
-librte_BACKENDS += librte-orte.la
-librte_BACKEND_LIBS += ${LIBOPENRTE}
+librte_orte_la_CFLAGS = -I${srcdir}/src/backend/orte -I${srcdir}/include ${LIBRTE_ORTE_CFLAGS}
+librte_orte_la_LDFLAGS = ${LIBRTE_ORTE_LDFLAGS}
+librte_orte_la_LIBADD = ${LIBRTE_ORTE_LIBADD}
 endif
-
-librte_orte_la_DEPENDENCIES =
-
-librte_orte_la_LDFLAGS = \
-    $(OMPI_LIBMPI_EXTRA_LDFLAGS)
