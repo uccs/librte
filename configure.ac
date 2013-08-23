@@ -69,27 +69,24 @@ LDFLAGS_SAVE=$LDFLAGS
 #Save $LIBS
 SAVE_LIBS=$LIBS
 AS_IF([test "x$use_orte" != "xno"],
-      [AS_IF([test "x$use_orte" != "xyes"],
+      [
+       #dnl Set the default path to /usr
+       orte_path="/usr"
+       orte_lib_path="/usr/lib"
+       orte_include_path="/usr/include"
+       AS_IF([test "x$use_orte" != "xyes"],
              [LDFLAGS="-L$use_orte/lib"
               orte_path=$use_orte
               orte_lib_path="$use_orte/lib"
               orte_include_path="$use_orte/include"
-              AC_SUBST([LIBRTE_ORTE_LDFLAGS], ["-L$orte_path/lib"])
-             ],[
-             #dnl Set the default path to /usr
-              orte_path="/usr"
-              orte_lib_path="/usr/lib"
-              orte_include_path="/usr/include"
-             ])
+             ],[])
        AS_IF([test "x$use_orte_lib" != "xno"],
              [LDFLAGS="-L$use_orte_lib"
               orte_lib_path="$use_orte_lib"
-             ],[]
-            )
+             ],[])
        AS_IF([test "x$use_orte_include" != "xno"],
              [orte_include_path="$use_orte_include"
-             ],[]
-            )
+             ],[])
        AC_CHECK_LIB([open-rte], [orte_init])
        AS_IF([test "$ac_cv_lib_open_rte_orte_init" = yes],
              [rte_orte_cflags=" -I$orte_include_path"
