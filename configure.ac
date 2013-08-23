@@ -98,6 +98,7 @@ AS_IF([test "x$use_orte" != "xno"],
               rte_orte_cflags+=" -I$orte_include_path/openmpi/opal/mca/event/libevent2021/libevent"
               AC_SUBST([LIBRTE_ORTE_CFLAGS],[$rte_orte_cflags])
               AC_SUBST([LIBRTE_ORTE_LIBADD],["-lopen-rte"])
+              AC_SUBST([LIBRTE_ORTE_LDFLAGS], ["-L$orte_lib_path"])
               AC_DEFINE([HAVE_ORTE], [1], [Define if we have ORTE])
              ],[
               AC_MSG_FAILURE([--with-orte was given, but test for orte failed])
