@@ -22,11 +22,35 @@ AC_ARG_WITH([orte],
     [use_orte=$withval],
     [use_orte=no])
 
+AC_ARG_WITH([orte-lib],
+    [AS_HELP_STRING([--with-orte-lib],
+                   [specify the path to the open-rte library])],
+    [use_orte_lib=$withval],
+    [use_orte_lib=no])
+
+AC_ARG_WITH([orte-include],
+    [AS_HELP_STRING([--with-orte-include],
+                   [specify the path to the open-rte include headers])],
+    [use_orte_include=$withval],
+    [use_orte_include=no])
+
 AC_ARG_WITH([stci],
     [AS_HELP_STRING([--with-stci],
                    [enable the stci backend (default is no)])],
     [use_stci=$withval],
     [use_stci=no])
+
+AC_ARG_WITH([stci-lib],
+    [AS_HELP_STRING([--with-stci-lib],
+                   [specify the path to the stci library])],
+    [use_stci_lib=$withval],
+    [use_stci_lib=no])
+
+AC_ARG_WITH([stci-include],
+    [AS_HELP_STRING([--with-stci-include],
+                   [specify the path to the stci include headers])],
+    [use_stci_include=$withval],
+    [use_stci_include=no])
 
 AC_ARG_WITH([tests],
     [AS_HELP_STRING([--with-tests],
@@ -40,27 +64,49 @@ AM_CONDITIONAL([WITH_RTE_TESTS], [test x$with_tests = xyes])
 LIBOPENRTE=
 LIBORTE_PATH=$use_orte/lib
 
+#save $LDFLAGS
 LDFLAGS_SAVE=$LDFLAGS
-
-AS_IF([test "x$use_orte" != xno],
+#Save $LIBS
+SAVE_LIBS=$LIBS
+AS_IF([test "x$use_orte" != "xno"],
       [AS_IF([test "x$use_orte" != "xyes"],
-              [LDFLAGS="-L$use_orte/lib"
-               orte_path=$use_orte
-               AC_SUBST([LIBRTE_ORTE_LDFLAGS], ["-L$orte_path/lib"])
-               AS_ECHO(["AS_ESCAPE(["x$use_orte" = ])AS_ESCAPE(["x$use_orte"], [""])"])
-              ],[
-               orte_path=""
-              ])
-       AC_CHECK_LIB([open-rte], [orte_init],
-       [
-        AC_SUBST([LIBRTE_ORTE_CFLAGS],
-                 ["-I$orte_path/include -I$orte_path/include/openmpi -I$orte_path/include/openmpi/opal/mca/hwloc/hwloc152/hwloc/include -I$orte_path/include/openmpi/opal/mca/event/libevent2021/libevent"])
-        AC_SUBST([LIBRTE_ORTE_LIBADD],["-lopen-rte"])
-        AC_DEFINE([HAVE_ORTE], [1], [Define if we have ORTE])
-       ],
-       [AC_MSG_FAILURE([--with-orte was given, but test for orte failed])],
-      [""])])
+             [LDFLAGS="-L$use_orte/lib"
+              orte_path=$use_orte
+              orte_lib_path="$use_orte/lib"
+              orte_include_path="$use_orte/include"
+              AC_SUBST([LIBRTE_ORTE_LDFLAGS], ["-L$orte_path/lib"])
+             ],[
+             #dnl Set the default path to /usr
+              orte_path="/usr"
+              orte_lib_path="/usr/lib"
+              orte_include_path="/usr/include"
+             ])
+       AS_IF([test "x$use_orte_lib" != "xno"],
+             [LDFLAGS="-L$use_orte_lib"
+              orte_lib_path="$use_orte_lib"
+             ],[]
+            )
+       AS_IF([test "x$use_orte_include" != "xno"],
+             [orte_include_path="$use_orte_include"
+             ],[]
+            )
+       AC_CHECK_LIB([open-rte], [orte_init])
+       AS_IF([test "$ac_cv_lib_open_rte_orte_init" = yes],
+             [rte_orte_cflags=" -I$orte_include_path"
+              rte_orte_cflags+=" -I$orte_include_path/openmpi"
+              rte_orte_cflags+=" -I$orte_include_path/openmpi/opal/mca/hwloc/hwloc152/hwloc/include"
+              rte_orte_cflags+=" -I$orte_include_path/openmpi/opal/mca/event/libevent2021/libevent"
+              AC_SUBST([LIBRTE_ORTE_CFLAGS],[$rte_orte_cflags])
+              AC_SUBST([LIBRTE_ORTE_LIBADD],["-lopen-rte"])
+              AC_DEFINE([HAVE_ORTE], [1], [Define if we have ORTE])
+             ],[
+              AC_MSG_FAILURE([--with-orte was given, but test for orte failed])
+             ])
+      ])
+
 AM_CONDITIONAL([HAVE_ORTE], [test "x$use_orte" != xno])
+
+#reset LDFLAGS
 LDFLAGS=$LDFLAGS_SAVE
 
 LIBSTCI=
@@ -73,6 +119,8 @@ AS_IF([test "x$use_stci" != xno],
       [""])])
 AM_CONDITIONAL([HAVE_STCI], [test x$use_stci = xyes])
 
+#reset $LIBS to save value
+LIBS=$SAVE_LIBS
 
 # Checks for header files.
 AC_CHECK_HEADERS([fcntl.h stdint.h stdlib.h string.h sys/time.h unistd.h])
