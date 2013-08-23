@@ -2,9 +2,14 @@
 
 if HAVE_STCI
 librte_BACKENDS += librte-stci.la
-endif
+librte_BACKEND_LIBS += ${LIBRTE_STCI_LIBADD}
 
-librte_stci_la_CPPFLAGS = $(LTDLINCL) -I /include
+librte_stci_la_CFLAGS = \
+    -I${srcdir}/src/backend/stci \
+    ${LIBRTE_STCI_CFLAGS}
+
+librte_stci_la_LIBADD = ${LIBRTE_STCI_LIBADD}
+librte_stci_la_LDFLAGS = ${LIBRTE_STCI_LDFLAGS}
 
 librte_stci_la_SOURCES = \
           src/backend/stci/coll/rte_barrier.c \
@@ -32,12 +37,4 @@ librte_stci_la_SOURCES = \
           src/backend/stci/rte_modex.c \
           src/backend/stci/rte_request.c \
           src/backend/stci/rte_show_help.c
-
-librte_stci_la_LIBADD = LIBSTCI
-
-librte_stci_la_CFLAGS=-I ${srcdir}/src/backend/stci
-
-librte_stci_la_DEPENDENCIES = 
-
-librte_stci_la_LDFLAGS = \
-    $(OMPI_LIBMPI_EXTRA_LDFLAGS)
+endif

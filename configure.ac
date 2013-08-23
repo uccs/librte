@@ -107,15 +107,39 @@ AM_CONDITIONAL([HAVE_ORTE], [test "x$use_orte" != xno])
 #reset LDFLAGS
 LDFLAGS=$LDFLAGS_SAVE
 
-LIBSTCI=
-AS_IF([test "x$use_stci" != xno],
-      [AC_CHECK_LIB([stci], [stci_init],
-      [AC_SUBST([LIBSTCI], ["-lstci -lopen_pal"])
-       AC_DEFINE([HAVE_STCI], [1], [Define if we have stci])
-      ],
-      [AC_MSG_FAILURE([--with-stci was given, but test for stci failed])],
-      [""])])
-AM_CONDITIONAL([HAVE_STCI], [test x$use_stci = xyes])
+AS_IF([test "x$use_stci" != "xno"],
+      [#dnl set the default path to /usr
+       stci_path="/usr"
+       stci_lib_path="/usr/lib"
+       stci_include_path="/usr/include"
+       AS_IF([test "x$use_stci" != "xyes"],
+             [stci_path=$use_stci
+              stci_lib_path="$use_stci/lib"
+              stci_include_path="$use_stci/include"])
+       AS_IF([test "x$use_stci_lib" != "xno"],
+             [stci_lib_path=$use_stci_lib])
+       AS_IF([test "x$use_stci_include" != "xno"],
+             [stci_include_path=$use_stci_include])
+       #dnl set LDFLAGS for the check
+       LDFLAGS="-L$stci_lib_path"
+       AC_CHECK_LIB([stci], [stci_init])
+       AS_IF([test "$ac_cv_lib_stci_stci_init" = yes],
+             [rte_stci_cflags=" -I$stci_include_path"
+              rte_stci_cflags+=" -I$stci_include_path/openmpi"
+              rte_stci_cflags+=" -I$stci_include_path/openmpi/opal/mca/hwloc/hwloc152/hwloc/include"
+              rte_stci_cflags+=" -I$stci_include_path/openmpi/opal/mca/event/libevent2021/libevent"
+              AC_SUBST([LIBRTE_STCI_CFLAGS],[$rte_stci_cflags])
+              AC_SUBST([LIBRTE_STCI_LIBADD], ["-lstci"])
+              AC_SUBST([LIBRTE_STCI_LDFLAGS],["-L$stci_lib_path"])
+              AC_DEFINE([HAVE_STCI], [1], [Define if we have stci])
+             ],[
+              AC_MSG_FAILURE([--with-stci was given, but test for stci failed])
+             ])
+       ])
+AM_CONDITIONAL([HAVE_STCI], [test "x$use_stci" != xno])
+
+#reset LDFLAGS
+LDFLAGS=$LDFLAGS_SAVE
 
 #reset $LIBS to save value
 LIBS=$SAVE_LIBS
