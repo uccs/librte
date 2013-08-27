@@ -36,7 +36,7 @@ RTE_PUBLIC int rte_orte_get_ec_locality (rte_ec_handle_t ec_handle) {
     rte_proc_t *proc = (rte_proc_t *)
         opal_pointer_array_get_item(&rte_procs, name->vpid);
 
-    if (NULL != proc)
+    if (NULL == proc)
         return OPAL_PROC_LOCALITY_UNKNOWN;
 
     return proc->locality;
