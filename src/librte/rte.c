@@ -12,10 +12,14 @@
 
 #include <rte.h>
 #include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "rte_config.h"
 
 /* include the headers for the backends  */
-
 #include "src/backend/orte/rte_orte.h"
+#include "src/backend/stci/rte_stci.h"
 
 /**
  * @file
