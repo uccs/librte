@@ -99,6 +99,7 @@ AM_CONDITIONAL([HAVE_ORTE], [test "x$use_orte" != xno])
 
 #reset LDFLAGS
 LDFLAGS=$LDFLAGS_SAVE
+LIBS=$SAVE_LIBS
 
 AS_IF([test "x$use_stci" != "xno"],
       [#dnl set the default path to /usr
