@@ -2,9 +2,9 @@
  * Copyright (c)           2011 UT-Battelle, LLC. All rights reserved.
  *                         All rights reserved.
  * $COPYRIGHT$
- * 
+ *
  * Additional copyrights may follow
- * 
+ *
  * $HEADER$
  *
  */
@@ -35,7 +35,7 @@ RTE_REQUEST_NON_PERSISTENT          = 0x00000000,
 /**
  * flag to oob_recv to allow caller to peek a portion of the next
  * available message w/out removing the message from the queue.
- */     
+ */
 RTE_REQUEST_PEEK                    = 0x00000001,
 
 /**
@@ -88,11 +88,11 @@ int rte_stci_unpack (rte_iovec_t     *data  ,
                 uint32_t        *offset)
 {
     int rc = RTE_SUCCESS;
-    
+
     stci_tlv_t *_data;
     _data = (stci_tlv_t *) data;
     rc = stci_p2pml.unpack (_data, src, offset);
-    
+
     return rc;
 }
 
@@ -100,12 +100,12 @@ int rte_stci_cancel (rte_ec_handle_t  peer, int tag)
 {
     int rc = RTE_SUCCESS;
     opal_list_t *requests;
-    
+
     stci_p2pml.find_requests((STCI_Process_name_t*)peer, tag, &requests);
-    
+
     opal_list_item_t                *item;
     STCI_Request_t *r;
-    
+
     /* we iterate over all posted requests and try to find a matching one */
     for (item =  opal_list_get_first (requests);
          item != opal_list_get_end   (requests);
@@ -116,6 +116,6 @@ int rte_stci_cancel (rte_ec_handle_t  peer, int tag)
             rc = (r)->cancel_fn (r);
         }
     }
-    
+
     return rc;
 }
