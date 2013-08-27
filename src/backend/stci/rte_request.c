@@ -72,7 +72,7 @@ const int RTE_RECV_REQUEST_PERSISTENT = RTE_REQUEST_PERSISTENT;
  * FIXME: Statuses are not handled in the moment.
  */
 
-inline void rte_stci_progress (void) {
+void rte_stci_progress (void) {
     stci_progress();
 }
 
