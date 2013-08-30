@@ -69,13 +69,13 @@
 
 /* Return codes */
 typedef enum {
-    RTE_SUCCESS,
-    RTE_ERROR,
-    RTE_ERROR_BAD_INPUT,
-    RTE_ERROR_OUT_OF_RESOURCE,
-    RTE_ERROR_NOT_IMPLEMENTED,
-    RTE_ERROR_NOT_FOUND,
-    RTE_MAX
+    RTE_SUCCESS = 0,
+    RTE_ERROR = -1,
+    RTE_ERROR_BAD_INPUT = -2,
+    RTE_ERROR_OUT_OF_RESOURCE = -3,
+    RTE_ERROR_NOT_IMPLEMENTED = -4,
+    RTE_ERROR_NOT_FOUND = - 5,
+    RTE_MAX = -255
 } rte_return_code;
 
 /*
