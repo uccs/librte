@@ -59,6 +59,24 @@ AC_ARG_WITH([tests],
     [with_tests=no])
 AM_CONDITIONAL([WITH_RTE_TESTS], [test x$with_tests = xyes])
 
+AC_ARG_WITH([pmi],
+    [AS_HELP_STRING([--with-pmi],
+                   [enable the pmi backend (default is no)])],
+    [use_pmi=$withval],
+    [use_pmi=no])
+
+AC_ARG_WITH([pmi-lib],
+    [AS_HELP_STRING([--with-stci-lib],
+                   [specify the path to the stci library])],
+    [use_stci_lib=$withval],
+    [use_stci_lib=no])
+
+AC_ARG_WITH([pmi-include],
+    [AS_HELP_STRING([--with-stci-include],
+                   [specify the path to the stci include headers])],
+    [use_stci_include=$withval],
+    [use_stci_include=no])
+
 # Checks for libraries.
 
 #save $LDFLAGS
@@ -131,6 +149,43 @@ AS_IF([test "x$use_stci" != "xno"],
              ])
        ])
 AM_CONDITIONAL([HAVE_STCI], [test "x$use_stci" != xno])
+
+#reset LDFLAGS
+LDFLAGS=$LDFLAGS_SAVE
+#reset $LIBS to save value
+LIBS=$SAVE_LIBS
+
+# Check for pmi libraries and flavors
+AS_IF([test "x$use_pmi" != "xno"],
+#      [#dnl set the default path to /usr
+#       pmi_path="/usr"
+#       pmi_lib_path="/usr/lib"
+#       pmi_include_path="/usr/include"
+#       AS_IF([test "x$use_pmi" != "xyes"],
+#             [pmi_path=$use_pmi
+#              pmi_lib_path="$pmi_path/lib"
+#              pmi_include_path="$pmi_path/include"])
+#       AS_IF([test "x$use_pmi_lib" != "xno"],
+#             [pmi_lib_path=$use_pmi_lib])
+#       AS_IF([test "x$use_pmi_include" != "xno"],
+#             [pmi_include_path=$use_pmi_include])
+#       #dnl set LDFLAGS for the check
+#       LDFLAGS="-L$stci_lib_path"
+#       AC_CHECK_LIB([stci], [stci_init])
+#       AS_IF([test "$ac_cv_lib_stci_stci_init" = yes],
+#             [rte_pmi_cflags=" -I$pmi_include_path"
+#              rte_pmi_cflags+=" -I$pmi_include_path/openmpi"
+#              rte_pmi_cflags+=" -I$pmi_include_path/openmpi/opal/mca/hwloc/hwloc152/hwloc/include"
+#              rte_pmi_cflags+=" -I$pmi_include_path/openmpi/opal/mca/event/libevent2021/libevent"
+#              AC_SUBST([LIBRTE_PMI_CFLAGS],[$rte_stci_cflags])
+#              AC_SUBST([LIBRTE_PMI_LIBADD], ["-lstci"])
+#              AC_SUBST([LIBRTE_PMI_LDFLAGS],["-L$stci_lib_path"])
+#              AC_DEFINE([HAVE_PMI], [1], [Define if we have stci])
+#             ],[
+#              AC_MSG_FAILURE([--with-stci was given, but test for stci failed])
+#             ])
+       ])
+AM_CONDITIONAL([HAVE_PMI], [test "x$use_pmi" != xno])
 
 #reset LDFLAGS
 LDFLAGS=$LDFLAGS_SAVE
