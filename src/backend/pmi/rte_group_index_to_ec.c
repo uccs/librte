@@ -11,6 +11,7 @@
 
 #include "rte.h"
 
+#include <pmi.h>
 #include <stddef.h>
 
 rte_ec_handle_t rte_pmi_group_index_to_ec(rte_group_t in_group,

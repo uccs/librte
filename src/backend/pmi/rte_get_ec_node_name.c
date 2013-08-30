@@ -11,6 +11,7 @@
 
 #include "rte.h"
 
+#include <pmi.h>
 #include <stddef.h>
 
 char * rte_pmi_get_ec_node_name(rte_ec_handle_t ec_handle)

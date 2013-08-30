@@ -10,6 +10,7 @@
  */
 
 #include "rte.h"
+#include <pmi.h>
 
 RTE_PUBLIC int rte_pmi_get_ec_locality (rte_ec_handle_t ec_handle)
 {

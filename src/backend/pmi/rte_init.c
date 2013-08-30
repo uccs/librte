@@ -10,9 +10,17 @@
  */
 
 #include "rte.h"
+#include <pmi.h>
 
 RTE_PUBLIC int rte_pmi_init(int *argc, char ***argv, rte_group_t *out_group)
 {
-   return RTE_ERROR_NOT_IMPLEMENTED;
+   int rc, spawned;
+   
+   rc = PMI_Init (&spawned);
+   if (PMI_SUCCESS == rc) {
+       return RTE_SUCCESS;
+   }
+   
+   return RTE_ERROR;
 }
 

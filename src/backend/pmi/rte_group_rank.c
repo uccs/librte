@@ -10,9 +10,17 @@
  */
 
 #include "rte.h"
+#include <pmi.h>
 
 RTE_PUBLIC int rte_pmi_group_rank (rte_group_t group)
 {
-    return RTE_ERROR_NOT_IMPLEMENTED;
+    int rc, rank;
+
+    rc = PMI_Get_rank (&rank);
+    if (PMI_SUCCESS == rc) {
+        return rank;
+    }
+
+    return RTE_ERROR;
 }
 

@@ -11,6 +11,7 @@
  */
 
 #include "rte.h"
+#include <pmi.h>
 
 /**
  * @brief Create a srs session

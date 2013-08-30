@@ -10,9 +10,17 @@
  */
 
 #include "rte.h"
+#include <pmi.h>
 
 int rte_pmi_barrier (rte_group_t group)
 {
-    return RTE_ERROR_NOT_IMPLEMENTED;
+    int rc;
+
+    rc = PMI_Barrier ();
+    if (PMI_SUCCESS == rc) {
+        return RTE_SUCCESS;
+    }
+
+    return RTE_ERROR;
 }
 

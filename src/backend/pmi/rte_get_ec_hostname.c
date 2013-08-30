@@ -11,7 +11,7 @@
  */
 
 #include "rte.h"
-
+#include <pmi.h>
 #include <stddef.h>
 
 RTE_PUBLIC char * rte_pmi_get_ec_hostname(rte_ec_handle_t ec_handle)

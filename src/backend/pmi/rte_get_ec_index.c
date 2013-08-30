@@ -11,6 +11,7 @@
  */
 
 #include "rte.h"
+#include <pmi.h>
 
 RTE_PUBLIC rte_node_index_t rte_pmi_get_ec_index(rte_group_t     group,
                                                  rte_ec_handle_t ec_handle)

@@ -10,9 +10,17 @@
  */
 
 #include "rte.h"
+#include <pmi.h>
 
 RTE_PUBLIC int rte_pmi_group_size(rte_group_t group)
 {
-    return RTE_ERROR_NOT_IMPLEMENTED;
+    int rc, size;
+
+    rc = PMI_Get_size (&size);
+    if (PMI_SUCCESS == rc) {
+        return size;
+    }
+
+    return RTE_ERROR;
 }
 

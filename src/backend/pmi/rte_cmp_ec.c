@@ -10,6 +10,7 @@
   */
 
 #include "rte.h"
+#include <pmi.h>
 
 int rte_pmi_cmp_ec (rte_ec_handle_t ec_handle_one, rte_ec_handle_t ec_handle_two)
 {

@@ -10,9 +10,17 @@
  */
 
 #include "rte.h"
+#include <pmi.h>
 
 RTE_PUBLIC int rte_pmi_finalize()
 {
-    return RTE_ERROR_NOT_IMPLEMENTED;
+    int rc;
+
+    rc = PMI_Finalize ();
+    if (PMI_SUCCESS == rc) {
+        return RTE_SUCCESS;
+    }
+
+    return RTE_ERROR;
 }
 
