@@ -157,6 +157,10 @@ LIBS=$SAVE_LIBS
 
 # Check for pmi libraries and flavors
 AS_IF([test "x$use_pmi" != "xno"],
+       # this is hardcoded for titan in the moment
+       AC_SUBST([LIBRTE_PMI_CFLAGS],[$CRAY_PMI_INCLUDE_OPTS])
+       AC_SUBST([LIBRTE_PMI_LDFLAGS],[$CRAY_PMI_POST_LINK_OPTS])
+       AC_SUBST([LIBRTE_PMI_LIBADD], ["-lpmi"])
 #      [#dnl set the default path to /usr
 #       pmi_path="/usr"
 #       pmi_lib_path="/usr/lib"
