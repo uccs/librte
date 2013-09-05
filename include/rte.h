@@ -3,9 +3,9 @@
  *                          All rights reserved.
  *
  * $COPYRIGHT$
- * 
+ *
  * Additional copyrights may follow
- * 
+ *
  * $HEADER$
  *
  */
@@ -32,7 +32,7 @@
  * @author Geoffroy Vallee
  */
 
-/** 
+/**
  * @addtogroup RTE
  *
  * @{
@@ -123,7 +123,7 @@ RTE_PUBLIC extern const struct rte_dt_t rte_bool;
  * Interface data structures *
  *****************************/
 
-/* 
+/*
  * Run time handle - runtime agent context is associated with such a handle
  */
 typedef void * rte_ec_handle_t;
@@ -147,7 +147,7 @@ typedef struct rte_iovec_t {
     uint32_t        count;
 } rte_iovec_t;
 
-/** 
+/**
  * @brief RTE initialization
  *
  * @details
