@@ -156,7 +156,7 @@ typedef struct rte_iovec_t {
  *
  * @param[in]      argc       Number of arguments in argument vector
  * @param[in]      argv       The argument vector
- * @param[in/out]  out_group  Group containing all execution contexts in the 
+ * @param[in/out]  out_group  Group containing all execution contexts in the
  *                            Application
  *
  * @return rte_init returns RTE_SUCCES on success or RTE_ERROR otherwise.
@@ -167,7 +167,8 @@ RTE_PUBLIC int rte_init(int *argc, char ***argv, rte_group_t *out_group);
  * @brief RTE agent finalization
  *
  * @details
- * The rte_finalize function shuts down the runtime. After calling rte_fini 
+ * The rte_finalize function shuts down the runtime. After calling
+ * rte_finalize no more calls to rte should be made.
  */
 RTE_PUBLIC int rte_finalize(void);
 
@@ -195,10 +196,22 @@ RTE_PUBLIC rte_ec_handle_t rte_get_my_ec(void);
 RTE_PUBLIC rte_ec_handle_t rte_group_index_to_ec(rte_group_t group,
                                                  rte_node_index_t index);
 
-/* Return group size */
+/**
+ * @brief Return the size of the given group
+ *
+ * @param[in]  group  The group to query for its size.
+ *
+ * @return The size of the given group
+ */
 RTE_PUBLIC int rte_group_size(rte_group_t group);
 
-/* returns the group rank */
+/**
+ * @brief Get the rank in a given group.
+ *
+ * @param[in]  group  The group to query for its size.
+ *
+ * @return The rank of the calling process in the given group
+ */
 RTE_PUBLIC int rte_group_rank(rte_group_t group);
 
 /* Pasha - the codes where taken from hwloc
@@ -221,40 +234,57 @@ RTE_PUBLIC extern const int RTE_PROC_ALL_LOCAL;
 
 RTE_PUBLIC int rte_get_ec_locality(rte_ec_handle_t ec_handle);
 
-/*
- * The function checks if the 2 ECs are identical. 
- * 0 - identical , 1  index of one is larger then index of two,
- * -1 - index of one is less then two
+/**
+ * @brief Compare tow execution contexts.
+ *
+ * @param[in] ec_handle_one The first handle to an execution context.
+ * @param[in] ec_handle_two The second handle to an execution context.
+ *
+ * The function checks if the two ECs are identical.
+ * @return 0 if identical, 1 index of one is larger then index of two,
+ *         -1 - index of one is less then two
  */
-RTE_PUBLIC int rte_cmp_ec(rte_ec_handle_t ec_handle_one, 
+RTE_PUBLIC int rte_cmp_ec(rte_ec_handle_t ec_handle_one,
                           rte_ec_handle_t ec_handle_two);
 
 /**
- * return a pointer to a string holding the RTE's index for the
- *  end-point corresponding to the execution-context's handle.
- *  A NULL return handle indicates an error.
- *  The assumption is that the pointer is managed by the RT, and
- *  is valid for the lifetime of the specified execution-context.
+ * @brief Get the execution contexts index in a group.
+ *
+ * @param[in] group      The group handle.
+ * @param[in] ec_handle  The EC handle.
+ *
+ * @return The index of the given execution context in the given group
  */
 RTE_PUBLIC rte_node_index_t rte_get_ec_index(rte_group_t group,
                                              rte_ec_handle_t ec_handle);
 
-/*
- * return a pointer to a string holding the RTE's "node" name.
+/**
+ * @brief Get the node name for an EC.
+ *
+ * @param[in] ec_handle  The EC handle.
+ *
+ * @return a pointer to a string holding the RTE's "node" name.
  *  The assumption is that the pointer is managed by the RT, and
  *  is valid for the lifetime of the specified execution-context.
  */
 RTE_PUBLIC char * rte_get_ec_node_name(rte_ec_handle_t ec_handle);
 
-/*
- * return a pointer to a string holding the RTE's HOSTNAME 
+/**
+ * @brief Get the hostname for an EC.
+ *
+ * @param[in] ec_handle  The EC handle.
+ *
+ * @return pointer to a string holding the RTE's HOSTNAME
  * (not necessarily identical to "node" name)
  */
 RTE_PUBLIC char * rte_get_ec_hostname(rte_ec_handle_t ec_handle);
 
-/*
- * return a pointer to a string holding the full path to RTE's session directory 
+/**
+ * @brief  Get path to session directory.
+ *
+ * @return pointer to a string holding the full path to RTE's session directory
  */
+ /* do we need a context here?  */
 RTE_PUBLIC char * rte_get_session_dir(rte_ec_handle_t ec_handle);
 
 /**
@@ -269,8 +299,8 @@ RTE_PUBLIC char * rte_get_session_dir(rte_ec_handle_t ec_handle);
 typedef void * rte_request_handle_t;  /* Publish / Subscribe request handle */
 
 
-/* SB: I am not sure if cbdata should be a void pointer or rather a datatype 
- *     giving detailed information about the context that triggert the callback 
+/* SB: I am not sure if cbdata should be a void pointer or rather a datatype
+ *     giving detailed information about the context that triggert the callback
  *     (source, tag, etc.)
  */
 
@@ -292,7 +322,7 @@ RTE_PUBLIC int rte_unpack(rte_iovec_t *data,
                           uint32_t *offset);
 
 /**
- * @addtogroup rte_p2p Point to Point Messaging 
+ * @addtogroup rte_p2p Point to Point Messaging
  * @{
  *
  * @details
@@ -389,8 +419,8 @@ RTE_PUBLIC int rte_barrier(rte_group_t group);
  * to communicate key - value pairs. The user can publish and/or subscribe
  * arbitary values identified by a key.
  *
- * The data shall be stored in a global registry unless the user limits the 
- * participants to a specific set of peers. To limit the peers participating in 
+ * The data shall be stored in a global registry unless the user limits the
+ * participants to a specific set of peers. To limit the peers participating in
  * a srs exchange the user can create a session.
  *
  * example publish code
@@ -520,7 +550,7 @@ RTE_PUBLIC int rte_srs_get_data(rte_srs_session_t session,
 /**
  * @brief blocking call to register a key/value pair with a session
  *
- * @note If the key provided already is registred with the session 
+ * @note If the key provided already is registred with the session
  *       RTE_ERR_DUPLICATE_KEY is returned.
  *
  * @param[in]  session     NULL for global exchange, rte_srs_session_t for
