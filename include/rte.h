@@ -123,7 +123,7 @@ RTE_PUBLIC extern const struct rte_dt_t rte_bool;
  * Interface data structures *
  *****************************/
 
-/*
+/**
  * Run time handle - runtime agent context is associated with such a handle
  */
 typedef void * rte_ec_handle_t;
@@ -135,11 +135,11 @@ typedef void *   rte_group_t;           /* Similar to MPI Communicator */
 typedef int      rte_tag_t;
 typedef uint32_t rte_node_index_t;      /* Node index */
 
-/* RTE iovec structure.
+/**
+ * RTE iovec structure.
  * In order to support heterogeneous runtime environment,
- * instead of length we have datatype (type) and number of elements of this type (count)
- *
- * the stride defines the distance between element(n)'s and element(n+1)'s start position in memory
+ * instead of length we have datatype (type) and number of elements of this
+ * type (count)
  */
 typedef struct rte_iovec_t {
     void           *iov_base;
