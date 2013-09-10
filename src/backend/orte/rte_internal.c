@@ -1,5 +1,7 @@
+#include "opal_config.h"
 #include "orte_config.h"
 #include "orte/types.h"
+#include "opal/mca/hwloc/hwloc.h"
 #include "opal/mca/hwloc/base/base.h"
 #include "opal/mca/db/db.h"
 #include "orte/util/proc_info.h"
@@ -31,8 +33,10 @@ OBJ_CLASS_INSTANCE(
 int all_orte_proc_init(void)
 {
     orte_vpid_t i;
+    orte_vpid_t daemon;
     char *cpu_bitmap;
     int rc;
+
 
     OBJ_CONSTRUCT(&rte_procs, opal_pointer_array_t);
     rc = opal_pointer_array_init(&rte_procs, orte_process_info.num_procs, INT_MAX, 10);
@@ -52,10 +56,17 @@ int all_orte_proc_init(void)
 
         proc->name.jobid = orte_process_info.my_name.jobid;
         proc->name.vpid = i;
-
         if (i == orte_process_info.my_name.vpid) {
             proc->hostname = strdup(orte_process_info.nodename);
-        } else {
+        }
+
+        if (ORTE_SUCCESS != (rc = opal_db.store((opal_identifier_t*)&proc->name,
+            OPAL_DB_INTERNAL, ORTE_DB_DAEMON_VPID, &daemon, OPAL_UINT32)))
+        {
+            OBJ_DESTRUCT(&rte_procs);
+            return RTE_ERROR;
+        }
+        else {
             rc = opal_db.fetch_pointer((opal_identifier_t*)&(proc->name), 
                     ORTE_DB_HOSTNAME, 
                     (void**)&(proc->hostname), 
@@ -64,24 +75,43 @@ int all_orte_proc_init(void)
                 return RTE_ERROR;
         }
 
-#if OPAL_HAVE_HWLOC
+#if  OPAL_HAVE_HWLOC
         /* retrieve the binding for the other proc */
-        rc = opal_db.fetch((opal_identifier_t*)&(proc->name), 
-                ORTE_DB_CPUSET, 
-                (void**)&cpu_bitmap, OPAL_STRING);
+        rc = opal_db.fetch((opal_identifier_t*)&(proc->name), ORTE_DB_CPUSET,
+                           (void**)&cpu_bitmap, OPAL_STRING);
         if (ORTE_SUCCESS != rc) {
             free(cpu_bitmap);
             return RTE_ERROR;
         }
-        /* we share a node - see what else we share */
-        proc->locality = opal_hwloc_base_get_relative_locality(opal_hwloc_topology,
-                orte_process_info.cpuset,
-                cpu_bitmap);
-#else
-        proc->locality = OPAL_PROC_ON_NODE;
-#endif
-    }
 
+        if (OPAL_EQUAL == orte_util_compare_name_fields(ORTE_NS_CMP_ALL,
+            &proc->name, ORTE_PROC_MY_NAME)) {
+            /* if this data is from myself, then set
+             * locality to all */
+            proc->locality = OPAL_PROC_ALL_LOCAL;
+        } else if (daemon != ORTE_PROC_MY_DAEMON->vpid) {
+            proc->locality = OPAL_PROC_ALL_LOCAL;
+        } else if (NULL == cpu_bitmap || NULL == orte_process_info.cpuset) {
+            proc->locality = OPAL_PROC_ON_NODE;
+        } else {
+            /* we share a node - see what else we share */
+            proc->locality = opal_hwloc_base_get_relative_locality(
+                                                       opal_hwloc_topology,
+                                                       orte_process_info.cpuset,
+                                                       cpu_bitmap);
+        }
+#else
+        if (OPAL_EQUAL == orte_util_compare_name_fields(ORTE_NS_CMP_ALL,
+            &proc->name, ORTE_PROC_MY_NAME)) {
+            proc->locality = OPAL_PROC_ALL_LOCAL;
+        } else if (daemon != ORTE_PROC_MY_DAEMON->vpid) {
+            proc->locality = OPAL_PROC_NON_LOCAL;
+        } else {
+            proc->locality = OPAL_PROC_ON_NODE;
+        }
+#endif
+
+    }
     return RTE_SUCCESS;
 }
 
