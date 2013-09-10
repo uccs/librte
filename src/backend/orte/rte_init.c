@@ -18,6 +18,7 @@
 #include "orte/util/proc_info.h"
 #include "orte/runtime/runtime.h"
 #include "orte/runtime/orte_globals.h"
+#include "orte/mca/grpcomm/grpcomm.h"
 
 #include "rte.h"
 #include "rte_internal.h"
@@ -36,9 +37,17 @@ static void hook_debugger(void)
     }
 }
 
+#define RTE_WAIT_FOR_COMPLETION(flg) \
+do {                                 \
+    while ((flg)) {                  \
+        opal_progress();             \
+    }                                \
+}while(0);                           \
+
 RTE_PUBLIC int rte_orte_init(int *argc, char ***argv, rte_group_t *out_group)
 {
     int rc;
+    orte_grpcomm_collective_t *coll;
 
     if (rte_initialized) 
         goto exit;
@@ -95,15 +104,42 @@ RTE_PUBLIC int rte_orte_init(int *argc, char ***argv, rte_group_t *out_group)
     hook_debugger();
     */
 
+#if OPAL_HAVE_HWLOC
+     /* if hwloc is available but didn't get setup for some
+      * reason, do so now
+      */
+     if (NULL == opal_hwloc_topology) {
+         if (OPAL_SUCCESS != (rc = opal_hwloc_base_get_topology())) {
+             goto error;
+         }
+     }
+#endif
+
     rc = all_orte_proc_init();
     if (RTE_SUCCESS != rc) {
         return RTE_ERROR;
     }
 
+    coll = OBJ_NEW(orte_grpcomm_collective_t);
+    coll->id = orte_process_info.peer_modex;
+    coll->active = true;
+    if (ORTE_SUCCESS != (rc = orte_grpcomm.modex(coll))) {
+        goto error;
+    }
+
+    /* wait for modex to complete - this may be moved anywhere in mpi_init
+     * so long as it occurs prior to calling a function that needs
+     * the modex info!
+     */
+    RTE_WAIT_FOR_COMPLETION(coll->active);
+    OBJ_RELEASE(coll);
+
 exit:
     /* Pasha: Orte has no support for groups, instead we return job object */
     *out_group = &orte_process_info;
-    
+
     return RTE_SUCCESS;
+error:
+    return RTE_ERROR;
 }
 
