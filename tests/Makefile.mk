@@ -1,5 +1,4 @@
-# Copyright (c) 2009-2010 UT-Battelle, LLC. All rights reserved.
-#                         All rights reserved.
+## Copyright (c) 2009-2013 UT-Battelle, LLC. All rights reserved.
 
 include tests/comm/Makefile.mk
 include tests/locality/Makefile.mk
