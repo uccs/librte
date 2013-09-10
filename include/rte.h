@@ -108,16 +108,16 @@ RTE_PUBLIC extern const struct rte_dt_t rte_bool;
 
 #define RTE_PREDEFINED_GLOBAL(type, global) ((type) ((void *) &(global)))
 
-#define rte_datatype_int8_t        RTE_PREDEFINED_GLOBAL (rte_datatype_t, rte_int1)
-#define rte_datatype_int16_t       RTE_PREDEFINED_GLOBAL (rte_datatype_t, rte_int2)
-#define rte_datatype_int32_t       RTE_PREDEFINED_GLOBAL (rte_datatype_t, rte_int4)
-#define rte_datatype_int64_t       RTE_PREDEFINED_GLOBAL (rte_datatype_t, rte_int8)
-#define rte_datatype_uint8_t       RTE_PREDEFINED_GLOBAL (rte_datatype_t, rte_uint1)
-#define rte_datatype_uint16_t      RTE_PREDEFINED_GLOBAL (rte_datatype_t, rte_uint2)
-#define rte_datatype_uint32_t      RTE_PREDEFINED_GLOBAL (rte_datatype_t, rte_uint4)
-#define rte_datatype_uint64_t      RTE_PREDEFINED_GLOBAL (rte_datatype_t, rte_uint8)
-#define rte_datatype_float_t       RTE_PREDEFINED_GLOBAL (rte_datatype_t, rte_float2)
-#define rte_datatype_bool_t        RTE_PREDEFINED_GLOBAL (rte_datatype_t, rte_bool)
+#define rte_datatype_int8_t   RTE_PREDEFINED_GLOBAL (rte_datatype_t, rte_int1)
+#define rte_datatype_int16_t  RTE_PREDEFINED_GLOBAL (rte_datatype_t, rte_int2)
+#define rte_datatype_int32_t  RTE_PREDEFINED_GLOBAL (rte_datatype_t, rte_int4)
+#define rte_datatype_int64_t  RTE_PREDEFINED_GLOBAL (rte_datatype_t, rte_int8)
+#define rte_datatype_uint8_t  RTE_PREDEFINED_GLOBAL (rte_datatype_t, rte_uint1)
+#define rte_datatype_uint16_t RTE_PREDEFINED_GLOBAL (rte_datatype_t, rte_uint2)
+#define rte_datatype_uint32_t RTE_PREDEFINED_GLOBAL (rte_datatype_t, rte_uint4)
+#define rte_datatype_uint64_t RTE_PREDEFINED_GLOBAL (rte_datatype_t, rte_uint8)
+#define rte_datatype_float_t  RTE_PREDEFINED_GLOBAL (rte_datatype_t, rte_float2)
+#define rte_datatype_bool_t   RTE_PREDEFINED_GLOBAL (rte_datatype_t, rte_bool)
 
 /*****************************
  * Interface data structures *
@@ -420,8 +420,8 @@ RTE_PUBLIC int rte_barrier(rte_group_t group);
  * arbitary values identified by a key.
  *
  * The data shall be stored in a global registry unless the user limits the
- * participants to a specific set of peers. To limit the peers participating in
- * a srs exchange the user can create a session.
+ * participants to a specific set of peers. To limit the peers participating
+ * in a srs exchange the user can create a session.
  *
  * example publish code
  *
