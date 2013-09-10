@@ -21,6 +21,7 @@ int main (int argc, char** argv)
     rte_ec_handle_t ec;
     rte_group_t     group;
     int             group_size, index, loc;
+    rte_srs_session_t    session1  = NULL;
 
     char *locality_str;
     char *loc_str = "local";
@@ -32,6 +33,19 @@ int main (int argc, char** argv)
 
     if (0 > group_size)
         goto error;
+
+    /* to get the locality we have to have a modex exchange first */
+    rc = rte_srs_session_create (group, 0, &session1);
+    if (rc != RTE_SUCCESS) {
+        fprintf (stderr, "Error: Impossible to allocate publish request\n");
+        goto error;
+    }
+
+    rc = rte_srs_exchange_data (session1);
+    if (rc != RTE_SUCCESS) {
+        fprintf (stderr, "Error: Impossible to prepare data publishing\n");
+        goto error;
+    }
 
     for (index = 0; index < group_size; index++) {
 
