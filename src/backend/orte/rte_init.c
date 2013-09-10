@@ -37,13 +37,6 @@ static void hook_debugger(void)
     }
 }
 
-#define RTE_WAIT_FOR_COMPLETION(flg) \
-do {                                 \
-    while ((flg)) {                  \
-        opal_progress();             \
-    }                                \
-}while(0);                           \
-
 RTE_PUBLIC int rte_orte_init(int *argc, char ***argv, rte_group_t *out_group)
 {
     int rc;
@@ -120,25 +113,12 @@ RTE_PUBLIC int rte_orte_init(int *argc, char ***argv, rte_group_t *out_group)
         return RTE_ERROR;
     }
 
-    coll = OBJ_NEW(orte_grpcomm_collective_t);
-    coll->id = orte_process_info.peer_modex;
-    coll->active = true;
-    if (ORTE_SUCCESS != (rc = orte_grpcomm.modex(coll))) {
-        goto error;
-    }
-
-    /* wait for modex to complete - this may be moved anywhere in mpi_init
-     * so long as it occurs prior to calling a function that needs
-     * the modex info!
-     */
-    RTE_WAIT_FOR_COMPLETION(coll->active);
-    OBJ_RELEASE(coll);
-
 exit:
     /* Pasha: Orte has no support for groups, instead we return job object */
     *out_group = &orte_process_info;
 
     return RTE_SUCCESS;
+
 error:
     return RTE_ERROR;
 }
