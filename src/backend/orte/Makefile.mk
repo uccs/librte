@@ -1,4 +1,4 @@
-# Copyright (c)      2013 UT-Battelle, LLC. All rights reserved.
+## Copyright (c) 2013      UT-Battelle, LLC. All rights reserved.
 
 if HAVE_ORTE
 librte_BACKENDS += librte-orte.la
