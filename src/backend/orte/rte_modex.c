@@ -3,9 +3,9 @@
  *                          All rights reserved.
  *
  * $COPYRIGHT$
- * 
+ *
  * Additional copyrights may follow
- * 
+ *
  * $HEADER$
  *
  */
@@ -85,13 +85,13 @@ RTE_PUBLIC int rte_orte_srs_get_data(rte_srs_session_t session,
     if (NULL == key || NULL == peer) {
         return RTE_ERROR_BAD_INPUT;
     }
-    
+
     /* the fetch API returns a pointer to the data */
     rc = opal_db.fetch((opal_identifier_t*)peer, key,(void**)&boptr, OPAL_BYTE_OBJECT);
     if (OPAL_SUCCESS == rc) {
         opal_buffer_t *buffer = OBJ_NEW(opal_buffer_t);;
         /* Load values */
-        rc = opal_dss.load(buffer, 
+        rc = opal_dss.load(buffer,
                             (void*)boptr->bytes, boptr->size);
         if (OPAL_SUCCESS != rc) {
             return RTE_ERROR;
@@ -109,7 +109,7 @@ RTE_PUBLIC int rte_orte_srs_get_data(rte_srs_session_t session,
 /**
  * @brief blocking call to register a key/value pair with a session
  *
- * @note If the key provided already is registred with the session 
+ * @note If the key provided already is registred with the session
  *       RTE_ERR_DUPLICATE_KEY is returned.
  *
  * @param[in]  session     NULL for global exchange, rte_srs_session_t for
@@ -148,8 +148,8 @@ RTE_PUBLIC int rte_orte_srs_set_data (rte_srs_session_t session,
     for (vec_i = 0; vec_i < iovcnt; ++vec_i) {
         offset = 0;
         for(c_i = 0; c_i < iov[vec_i].count; ++c_i) {
-            rc = opal_dss.pack(buffer, 
-                    (void *)((char *)iov[vec_i].iov_base + offset), 
+            rc = opal_dss.pack(buffer,
+                    (void *)((char *)iov[vec_i].iov_base + offset),
                     1, (opal_data_type_t)iov[vec_i].type->opal_dt);
             if (OPAL_SUCCESS != rc) {
                 rc = RTE_ERROR;
@@ -158,7 +158,7 @@ RTE_PUBLIC int rte_orte_srs_set_data (rte_srs_session_t session,
             offset += get_datatype_size(iov[vec_i].type);
         }
     }
-    
+
     /* Repack data */
     rc = opal_dss.unload(buffer, &dataptr, &datalen);
     if (rc != OPAL_SUCCESS) {
@@ -186,22 +186,25 @@ out:
 RTE_PUBLIC int rte_orte_srs_exchange_data(rte_srs_session_t session)
 {
     int rc;
-    orte_grpcomm_collective_t coll;
+    orte_grpcomm_collective_t *coll;
 
-    OBJ_CONSTRUCT(&coll, orte_grpcomm_collective_t);
+    coll = OBJ_NEW (orte_grpcomm_collective_t);
     if (!modex_used || &modex_used != session) {
         return RTE_ERROR;
     }
-    coll.id = orte_process_info.peer_modex;
+    coll->id = orte_process_info.peer_modex;
 
-    opal_progress_event_users_increment();
-    if (OPAL_SUCCESS != (rc = orte_grpcomm.modex(&coll))) {
+    if (OPAL_SUCCESS != (rc = orte_grpcomm.modex(coll))) {
         return RTE_ERROR;
     }
 
-    while (coll.active) {
-        rte_progress();
-    }   
-    opal_progress_event_users_decrement();
+    coll->active = true;
+
+    while (coll->active) {
+        opal_progress();
+    }
+
+    OBJ_RELEASE (coll);
     return RTE_SUCCESS;
 }
+
