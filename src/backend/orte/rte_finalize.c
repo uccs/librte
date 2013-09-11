@@ -12,7 +12,7 @@
 #include "orte_config.h"
 
 #include "rte.h"
-#include "opal/constants.h"
+#include "orte/constants.h"
 #include "orte/runtime/runtime.h"
 #include "rte_internal.h"
 
@@ -20,7 +20,7 @@ RTE_PUBLIC int rte_orte_finalize()
 {
     int rc;
     rc = orte_finalize();
-    if (OPAL_SUCCESS != rc)
+    if (ORTE_SUCCESS != rc)
         return RTE_ERROR;
     return all_orte_proc_release();
 }
