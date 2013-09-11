@@ -22,5 +22,9 @@ RTE_PUBLIC int rte_orte_finalize()
     rc = orte_finalize();
     if (ORTE_SUCCESS != rc)
         return RTE_ERROR;
-    return all_orte_proc_release();
+
+    rc = all_orte_proc_release();
+    if (RTE_SUCCESS != rc) {
+        return RTE_ERROR;
+    }
 }
