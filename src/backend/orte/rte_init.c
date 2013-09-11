@@ -1,10 +1,10 @@
 /*
- * Copyright (c)           2011 UT-Battelle, LLC. All rights reserved.
- *                         All rights reserved.
+ * Copyright (c) 2011-2013 UT-Battelle, LLC. All rights reserved.
+ *
  * $COPYRIGHT$
- * 
+ *
  * Additional copyrights may follow
- * 
+ *
  * $HEADER$
  *
  */
@@ -12,7 +12,7 @@
 
 #include "opal/runtime/opal.h"
 #include "opal/util/arch.h"
-#include "opal/mca/base/base.h"   
+#include "opal/mca/base/base.h"
 #include "opal/constants.h"
 
 #include "orte/util/proc_info.h"
@@ -40,9 +40,8 @@ static void hook_debugger(void)
 RTE_PUBLIC int rte_orte_init(int *argc, char ***argv, rte_group_t *out_group)
 {
     int rc;
-    orte_grpcomm_collective_t *coll;
 
-    if (rte_initialized) 
+    if (rte_initialized)
         goto exit;
 
     rte_initialized = true;
@@ -51,7 +50,7 @@ RTE_PUBLIC int rte_orte_init(int *argc, char ***argv, rte_group_t *out_group)
         return RTE_ERROR;
     }
 
-    /* Pasha: This is MPI specific code 
+    /* Pasha: This is MPI specific code
     if (OPAL_SUCCESS != (ret = opal_arch_set_fortran_logical_size(sizeof(ompi_fortran_logical_t)))) {
         return RTE_ERROR;
     }
@@ -97,21 +96,13 @@ RTE_PUBLIC int rte_orte_init(int *argc, char ***argv, rte_group_t *out_group)
     hook_debugger();
     */
 
-#if OPAL_HAVE_HWLOC
-     /* if hwloc is available but didn't get setup for some
-      * reason, do so now
-      */
-     if (NULL == opal_hwloc_topology) {
-         if (OPAL_SUCCESS != (rc = opal_hwloc_base_get_topology())) {
-             goto error;
-         }
-     }
-#endif
-
     rc = all_orte_proc_init();
     if (RTE_SUCCESS != rc) {
         return RTE_ERROR;
     }
+
+/* see if yield_when_idle was specified - if so, use it */
+    opal_progress_set_yield_when_idle (true);
 
 exit:
     /* Pasha: Orte has no support for groups, instead we return job object */

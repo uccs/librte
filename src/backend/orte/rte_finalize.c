@@ -1,10 +1,10 @@
 /*
- * Copyright (c)           2011 UT-Battelle, LLC. All rights reserved.
- *                         All rights reserved.
+ * Copyright (c) 2011-2013 UT-Battelle, LLC. All rights reserved.
+ *
  * $COPYRIGHT$
- * 
+ *
  * Additional copyrights may follow
- * 
+ *
  * $HEADER$
  *
  */
@@ -19,6 +19,7 @@
 RTE_PUBLIC int rte_orte_finalize()
 {
     int rc;
+
     rc = orte_finalize();
     if (ORTE_SUCCESS != rc)
         return RTE_ERROR;
