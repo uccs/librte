@@ -20,7 +20,7 @@ int main (int argc, char** argv)
 
     rte_ec_handle_t ec;
     rte_group_t     group;
-    int             group_size, index, loc;
+    int             group_size, index, loc, my_rank;
     rte_srs_session_t    session1  = NULL;
 
     char *locality_str;
@@ -30,6 +30,8 @@ int main (int argc, char** argv)
     rte_init (&argc, &argv, &group);
 
     group_size = rte_group_size (group);
+
+    my_rank = rte_group_rank (group);
 
     if (0 > group_size)
         goto error;
@@ -56,7 +58,8 @@ int main (int argc, char** argv)
 
         loc = rte_get_ec_locality (ec);
 
-        printf ("rank %d is %s\n", index, rte_locality_to_str(loc));
+        printf ("[rank:%d] rank %d is %s\n",
+                my_rank, index, rte_locality_to_str(loc));
     }
 
     rte_finalize ();
