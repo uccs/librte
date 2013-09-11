@@ -74,7 +74,6 @@ int all_orte_proc_release(void)
         proc = (rte_proc_t *)opal_pointer_array_get_item(&rte_procs, i);
         if (NULL != proc) {
             OBJ_RELEASE(proc);
-            return RTE_ERROR;
         }
     }
     OBJ_DESTRUCT(&rte_procs);
