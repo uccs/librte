@@ -232,6 +232,9 @@ RTE_PUBLIC extern const int RTE_PROC_ON_CORE;
 RTE_PUBLIC extern const int RTE_PROC_ON_HWTHREAD;
 RTE_PUBLIC extern const int RTE_PROC_ALL_LOCAL;
 
+/**
+ * @brief Return the locality of a given execuion context.
+ */
 RTE_PUBLIC int rte_get_ec_locality(rte_ec_handle_t ec_handle);
 
 /**
