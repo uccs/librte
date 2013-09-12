@@ -4,4 +4,4 @@ include src/backend/orte/Makefile.mk
 include src/backend/stci/Makefile.mk
 include src/backend/pmi/Makefile.mk
 
-lib_LTLIBRARIES += ${librte_BACKENDS}
+noinst_LTLIBRARIES += ${librte_BACKENDS}
