@@ -576,7 +576,6 @@ RTE_PUBLIC int rte_srs_set_data(rte_srs_session_t session,
  *                      scoped exchange
  * @param[out] request the request object
  * @return returns RTE_SUCCESS on success or an error code in case of error
- * Pasha: depricated
  */
 RTE_PUBLIC int rte_srs_exchange_data(rte_srs_session_t session);
 
