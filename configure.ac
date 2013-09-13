@@ -13,6 +13,14 @@ LT_INIT([])
 AC_LANG([C])
 # Checks for programs.
 AC_PROG_CC
+AC_PROG_AWK
+AC_PROG_GREP
+
+AC_DEFUN([RTE_CHECK_OPAL_HWLOC_VERSION],[
+    hwloc_include_dir=$(grep MCA_hwloc_IMPLEMENTATION_HEADER $2/opal_config.h | awk '{print $ 3}' | tr -d \"| xargs dirname)
+    echo $hwloc_include_dir
+    AC_SUBST([$1_hwloc_include_dir],[$hwloc_include_dir])
+])
 
 # Check for features.
 # AC_ARG_ENABLE (feature, help-string, [action-if-given], [action-if-not-given])
@@ -101,9 +109,10 @@ AS_IF([test "x$use_orte" != "xno"],
        LDFLAGS="-L$orte_lib_path"
        AC_CHECK_LIB([open-rte], [orte_init])
        AS_IF([test "$ac_cv_lib_open_rte_orte_init" = yes],
-             [rte_orte_cflags=" -I$orte_include_path"
+             [RTE_CHECK_OPAL_HWLOC_VERSION([rte_orte],[$orte_include_path/openmpi])
+              rte_orte_cflags=" -I$orte_include_path"
               rte_orte_cflags+=" -I$orte_include_path/openmpi"
-              rte_orte_cflags+=" -I$orte_include_path/openmpi/opal/mca/hwloc/hwloc152/hwloc/include"
+              rte_orte_cflags+=" -I$orte_include_path/openmpi/$rte_orte_hwloc_include_dir/hwloc/include"
               rte_orte_cflags+=" -I$orte_include_path/openmpi/opal/mca/event/libevent2021/libevent"
               AC_SUBST([LIBRTE_ORTE_CFLAGS],[$rte_orte_cflags])
               AC_SUBST([LIBRTE_ORTE_LIBADD],["-lopen-rte"])
