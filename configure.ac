@@ -16,6 +16,12 @@ AC_PROG_CC
 AC_PROG_AWK
 AC_PROG_GREP
 
+AC_DEFUN([RTE_CHECK_OPAL_LIBEVENT_VERSION],[
+    libevent_include_dir=$(grep MCA_event_IMPLEMENTATION_HEADER $2/opal_config.h | awk '{print $ 3}' | tr -d \"| xargs dirname)
+    echo $libevent_include_dir
+    AC_SUBST([$1_libevent_include_dir],[$libevent_include_dir])
+])
+
 AC_DEFUN([RTE_CHECK_OPAL_HWLOC_VERSION],[
     hwloc_include_dir=$(grep MCA_hwloc_IMPLEMENTATION_HEADER $2/opal_config.h | awk '{print $ 3}' | tr -d \"| xargs dirname)
     echo $hwloc_include_dir
@@ -110,10 +116,11 @@ AS_IF([test "x$use_orte" != "xno"],
        AC_CHECK_LIB([open-rte], [orte_init])
        AS_IF([test "$ac_cv_lib_open_rte_orte_init" = yes],
              [RTE_CHECK_OPAL_HWLOC_VERSION([rte_orte],[$orte_include_path/openmpi])
+              RTE_CHECK_OPAL_LIBEVENT_VERSION([rte_orte],[$orte_include_path/openmpi])
               rte_orte_cflags=" -I$orte_include_path"
               rte_orte_cflags+=" -I$orte_include_path/openmpi"
               rte_orte_cflags+=" -I$orte_include_path/openmpi/$rte_orte_hwloc_include_dir/hwloc/include"
-              rte_orte_cflags+=" -I$orte_include_path/openmpi/opal/mca/event/libevent2021/libevent"
+              rte_orte_cflags+=" -I$orte_include_path/openmpi/$rte_orte_libevent_include_dir/libevent"
               AC_SUBST([LIBRTE_ORTE_CFLAGS],[$rte_orte_cflags])
               AC_SUBST([LIBRTE_ORTE_LIBADD],["-lopen-rte"])
               AC_SUBST([LIBRTE_ORTE_LDFLAGS], ["-L$orte_lib_path"])
@@ -145,7 +152,9 @@ AS_IF([test "x$use_stci" != "xno"],
        LDFLAGS="-L$stci_lib_path"
        AC_CHECK_LIB([stci], [stci_init])
        AS_IF([test "$ac_cv_lib_stci_stci_init" = yes],
-             [rte_stci_cflags=" -I$stci_include_path"
+             [RTE_CHECK_OPAL_HWLOC_VERSION([rte_stci],[$stci_include_path/openmpi])
+              RTE_CHECK_OPAL_LIBEVENT_VERSION([rte_stci],[$stci_include_path/openmpi])
+              rte_stci_cflags=" -I$stci_include_path"
               rte_stci_cflags+=" -I$stci_include_path/openmpi"
               rte_stci_cflags+=" -I$stci_include_path/openmpi/opal/mca/hwloc/hwloc152/hwloc/include"
               rte_stci_cflags+=" -I$stci_include_path/openmpi/opal/mca/event/libevent2021/libevent"
