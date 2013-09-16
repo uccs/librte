@@ -133,12 +133,18 @@ typedef void * rte_ec_handle_t;
  */
 typedef void *   rte_group_t;           /* Similar to MPI Communicator */
 typedef int      rte_tag_t;
+
+/**
+ * @brief The node index.
+ * @detail This type is used for the index in of an EC in the
+ *         application or group.
+ */
 typedef uint32_t rte_node_index_t;      /* Node index */
 
 /**
  * RTE iovec structure.
  * In order to support heterogeneous runtime environment,
- * instead of length we have datatype (type) and number of elements of this
+ * instead of length we have data type (type) and number of elements of this
  * type (count)
  */
 typedef struct rte_iovec_t {
@@ -162,6 +168,10 @@ typedef struct rte_iovec_t {
  * @return rte_init returns RTE_SUCCES on success or RTE_ERROR otherwise.
  */
 RTE_PUBLIC int rte_init(int *argc, char ***argv, rte_group_t *out_group);
+/* proposed change:
+   RTE_PUBLIC int rte_init (void);
+ */
+
 
 /**
  * @brief RTE agent finalization
@@ -174,6 +184,11 @@ RTE_PUBLIC int rte_finalize(void);
 
 /**
  * @brief RTE agent abort
+ * @details This function aborts the current execution context and
+ *          possibly the application.
+ *          Note: Aborting the application is not guaranteed. This
+ *          depends on the back end. Instead of aborting the application
+ *          a back end implementation might notify the other ECs.
  */
 RTE_PUBLIC void rte_abort(int error_code, char *exit_description, ...);
 
@@ -296,21 +311,17 @@ RTE_PUBLIC char * rte_get_session_dir(rte_ec_handle_t ec_handle);
  * @{
  */
 
+#if 0
 /**
  * @brief Handle to a request object.
  */
 typedef void * rte_request_handle_t;  /* Publish / Subscribe request handle */
-
-
-/* SB: I am not sure if cbdata should be a void pointer or rather a datatype
- *     giving detailed information about the context that triggert the callback
- *     (source, tag, etc.)
- */
+#endif
 
 typedef void (*rte_request_cb_t) (int status, rte_ec_handle_t peer,
                                   void * data_buffer, int tag, void *cbdata);
-
 RTE_PUBLIC extern const int RTE_RECV_REQUEST_PERSISTENT;
+
 
 /**
  * @brief cancel a request
@@ -383,7 +394,7 @@ RTE_PUBLIC int rte_send(rte_iovec_t *iov,
              rte_group_t group);
 
 /**
- * @brief Blocking send with function callback
+ * @brief Non-blocking send with function callback
  *
  */
 RTE_PUBLIC int rte_send_nbcb(rte_iovec_t *iov,
@@ -404,7 +415,7 @@ RTE_PUBLIC int rte_send_nbcb(rte_iovec_t *iov,
 /**
  * @brief Barrier function
  *
- * @param[in] group                the group to syncronize
+ * @param[in] group                the group to synchronize
  *
  * @return RTE_SUCCESS on success, error code otherwise
  */
@@ -414,13 +425,13 @@ RTE_PUBLIC int rte_barrier(rte_group_t group);
 /*--                           SRS Interface                                --*/
 
 /**
- * @addtogroup SRS Storage Rertieval System
+ * @addtogroup SRS Storage Retrieval System
  * @{
  *
  * @details
- * The Storage Rertieval System (SRS) is intended to provide the means
+ * The Storage Retrieval System (SRS) is intended to provide the means
  * to communicate key - value pairs. The user can publish and/or subscribe
- * arbitary values identified by a key.
+ * arbitrary values identified by a key.
  *
  * The data shall be stored in a global registry unless the user limits the
  * participants to a specific set of peers. To limit the peers participating
@@ -515,7 +526,7 @@ typedef char * rte_srs_key_t;
  * @brief Create a srs session
  *
  * @param[in]     group    the group this session is limited to
- * @param[in]     tag      an arbitary tag
+ * @param[in]     tag      an arbitrary tag
  * @param[in,out] session  pointer to the session the session object
  *
  * @return RTE_SUCCESS on success, RTE_ERROR otherwise
@@ -540,7 +551,7 @@ RTE_PUBLIC int rte_srs_session_destroy(rte_srs_session_t session);
  *                      scoped exchange
  * @param[in]  peer     the peer we want the data from
  * @param[in]  key      the key the value will be assigned to
- * @param[out] value    bointer to the data buffer for the given key
+ * @param[out] value    pointer to the data buffer for the given key
  *
  * @return RTE_SUCCESS on success, RTE_ERROR otherwise
  */
@@ -553,7 +564,7 @@ RTE_PUBLIC int rte_srs_get_data(rte_srs_session_t session,
 /**
  * @brief blocking call to register a key/value pair with a session
  *
- * @note If the key provided already is registred with the session
+ * @note If the key provided already is registered with the session
  *       RTE_ERR_DUPLICATE_KEY is returned.
  *
  * @param[in]  session     NULL for global exchange, rte_srs_session_t for
