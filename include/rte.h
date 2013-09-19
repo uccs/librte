@@ -33,7 +33,7 @@
  */
 
 /**
- * @addtogroup RTE
+ * @addtogroup rte RTE
  *
  * @{
  */
@@ -67,7 +67,12 @@
  * Return Codes *
  ****************/
 
-/* Return codes */
+/**
+ * @brief  RTE error codes 
+ *
+ * @details Most RTE functions will return one of these codes to
+ *          indicate successful completion or if an error occurred.
+ */
 typedef enum {
     RTE_SUCCESS = 0,
     RTE_ERROR = -1,
@@ -82,6 +87,12 @@ typedef enum {
  * Basic data types
  */
 
+/**
+ * @brief Data type description.
+ *
+ * @details The rte_datatype_t type is used to describe the data stored
+ *          in a buffer.
+ */
 typedef struct rte_dt_t * rte_datatype_t;
 
 /* from ompi (mpi.h) */
@@ -95,14 +106,15 @@ typedef struct rte_dt_t * rte_datatype_t;
  * checking (because we *do* have the full type definitions available
  * when building OMPI).
  */
-RTE_PUBLIC extern const struct rte_dt_t rte_int1; /* 8 byte  */
-RTE_PUBLIC extern const struct rte_dt_t rte_int2; /* 16 byte */
-RTE_PUBLIC extern const struct rte_dt_t rte_int4; /* 32 byte */
-RTE_PUBLIC extern const struct rte_dt_t rte_int8; /* 64 byte */
-RTE_PUBLIC extern const struct rte_dt_t rte_uint1;/* 8 byte  */
-RTE_PUBLIC extern const struct rte_dt_t rte_uint2;/* 16 byte */
-RTE_PUBLIC extern const struct rte_dt_t rte_uint4;/* 32 byte */
-RTE_PUBLIC extern const struct rte_dt_t rte_uint8;/* 64 byte */
+
+RTE_PUBLIC extern const struct rte_dt_t rte_int1; /*< 8 bit  */
+RTE_PUBLIC extern const struct rte_dt_t rte_int2; /* 16 bit */
+RTE_PUBLIC extern const struct rte_dt_t rte_int4; /* 32 bit */
+RTE_PUBLIC extern const struct rte_dt_t rte_int8; /* 64 bit */
+RTE_PUBLIC extern const struct rte_dt_t rte_uint1;/* 8 bit  */
+RTE_PUBLIC extern const struct rte_dt_t rte_uint2;/* 16 bit */
+RTE_PUBLIC extern const struct rte_dt_t rte_uint4;/* 32 bit */
+RTE_PUBLIC extern const struct rte_dt_t rte_uint8;/* 64 bit */
 RTE_PUBLIC extern const struct rte_dt_t rte_float2;
 RTE_PUBLIC extern const struct rte_dt_t rte_bool;
 
@@ -135,9 +147,9 @@ typedef void *   rte_group_t;           /* Similar to MPI Communicator */
 typedef int      rte_tag_t;
 
 /**
- * @brief The node index.
- * @detail This type is used for the index in of an EC in the
- *         application or group.
+ * @brief   The node index.
+ * @details This type is used for the index in of an EC in the
+ *          application or group.
  */
 typedef uint32_t rte_node_index_t;      /* Node index */
 
@@ -148,24 +160,26 @@ typedef uint32_t rte_node_index_t;      /* Node index */
  * type (count)
  */
 typedef struct rte_iovec_t {
-    void           *iov_base;
-    const struct rte_dt_t *type;
-    uint32_t        count;
+    void           *iov_base;    /**< pointer to the data */
+    const struct rte_dt_t *type; /**< The data type of the elements in
+                                      the iovec */
+    uint32_t        count;       /**< Number of elements in the vector */
 } rte_iovec_t;
 
 /**
  * @brief RTE initialization
  *
- * @details
- * The rte_init function initializes the run time environment. It shall be
- * called before calls to any other run time functions.
+ * @details The rte_init function initializes the run time environment.
+ *          It shall be called before calls to any other run time functions.
  *
- * @param[in]      argc       Number of arguments in argument vector
- * @param[in]      argv       The argument vector
- * @param[in/out]  out_group  Group containing all execution contexts in the
+ * @param[in]     argc       Number of arguments in argument vector
+ * @param[in]     argv       The argument vector
+ * @param[in,out] out_group  Group containing all execution contexts in the
  *                            Application
+ * @note argc may be 0 and argv may be NULL
  *
- * @return rte_init returns RTE_SUCCES on success or RTE_ERROR otherwise.
+ * @return RTE_SUCCESS On successful initialization.
+ * @return RTE_ERROR On error.
  */
 RTE_PUBLIC int rte_init(int *argc, char ***argv, rte_group_t *out_group);
 /* proposed change:
@@ -179,6 +193,9 @@ RTE_PUBLIC int rte_init(int *argc, char ***argv, rte_group_t *out_group);
  * @details
  * The rte_finalize function shuts down the runtime. After calling
  * rte_finalize no more calls to rte should be made.
+ *
+ * @return RTE_SUCCESS On successful initialization.
+ * @return RTE_ERROR On error.
  */
 RTE_PUBLIC int rte_finalize(void);
 
@@ -189,6 +206,9 @@ RTE_PUBLIC int rte_finalize(void);
  *          Note: Aborting the application is not guaranteed. This
  *          depends on the back end. Instead of aborting the application
  *          a back end implementation might notify the other ECs.
+ *
+ * @return RTE_SUCCESS On successful initialization.
+ * @return RTE_ERROR On error.
  */
 RTE_PUBLIC void rte_abort(int error_code, char *exit_description, ...);
 
@@ -206,7 +226,7 @@ RTE_PUBLIC rte_ec_handle_t rte_get_my_ec(void);
  * @param[in]  group  The group to query the execution context from.
  * @param[in]  index  The index of the execution context in the group.
  *
- * @return Returns rte_ec_handle_t for the specified execution context.
+ * @return A rte_ec_handle_t for the ec at the given rank in the group.
  */
 RTE_PUBLIC rte_ec_handle_t rte_group_index_to_ec(rte_group_t group,
                                                  rte_node_index_t index);
@@ -248,7 +268,7 @@ RTE_PUBLIC extern const int RTE_PROC_ON_HWTHREAD;
 RTE_PUBLIC extern const int RTE_PROC_ALL_LOCAL;
 
 /**
- * @brief Return the locality of a given execuion context.
+ * @brief Return the locality of a given execution context.
  */
 RTE_PUBLIC int rte_get_ec_locality(rte_ec_handle_t ec_handle);
 
@@ -259,8 +279,10 @@ RTE_PUBLIC int rte_get_ec_locality(rte_ec_handle_t ec_handle);
  * @param[in] ec_handle_two The second handle to an execution context.
  *
  * The function checks if the two ECs are identical.
- * @return 0 if identical, 1 index of one is larger then index of two,
- *         -1 - index of one is less then two
+ * @return  0 if identical
+ * @return  1 if the index of ec_handle_one is larger then index of
+ *          ec_handle_two,
+ * @return -1 if the index of ec_handle_one is less then ec_handle_two
  */
 RTE_PUBLIC int rte_cmp_ec(rte_ec_handle_t ec_handle_one,
                           rte_ec_handle_t ec_handle_two);
@@ -282,8 +304,8 @@ RTE_PUBLIC rte_node_index_t rte_get_ec_index(rte_group_t group,
  * @param[in] ec_handle  The EC handle.
  *
  * @return a pointer to a string holding the RTE's "node" name.
- *  The assumption is that the pointer is managed by the RT, and
- *  is valid for the lifetime of the specified execution-context.
+ * @note The assumption is that the pointer is managed by the RT, and
+ *       is valid for the lifetime of the specified execution-context.
  */
 RTE_PUBLIC char * rte_get_ec_node_name(rte_ec_handle_t ec_handle);
 
@@ -292,50 +314,54 @@ RTE_PUBLIC char * rte_get_ec_node_name(rte_ec_handle_t ec_handle);
  *
  * @param[in] ec_handle  The EC handle.
  *
- * @return pointer to a string holding the RTE's HOSTNAME
- * (not necessarily identical to "node" name)
+ * @return pointer to a string holding the execution contexts host name
+ * @note The host nme is not necessarily identical to the node name
  */
 RTE_PUBLIC char * rte_get_ec_hostname(rte_ec_handle_t ec_handle);
 
 /**
  * @brief  Get path to session directory.
  *
- * @return pointer to a string holding the full path to RTE's session directory
+ * @return pointer to a string holding the full path to applications
+ *         session directory
  */
  /* do we need a context here?  */
 RTE_PUBLIC char * rte_get_session_dir(rte_ec_handle_t ec_handle);
 
-/**
- * @addtogroup rte_request Request functions
- *
- * @{
- */
-
-#if 0
-/**
- * @brief Handle to a request object.
- */
-typedef void * rte_request_handle_t;  /* Publish / Subscribe request handle */
-#endif
-
-typedef void (*rte_request_cb_t) (int status, rte_ec_handle_t peer,
-                                  void * data_buffer, int tag, void *cbdata);
+/* SB: should we rename this? There are no requests in the RTE interface
+ * anymore. */
 RTE_PUBLIC extern const int RTE_RECV_REQUEST_PERSISTENT;
 
 
 /**
- * @brief cancel a request
+ * @brief cancel an outstanding non blocking send/receive operation.
+ *
+ * @param[in] peer The peer the outstanding send/receive is for
+ * @param[in] tag  The tag qualifying the send/receive operation.
+ *
+ * @note If there are multiple operations that match the peer, tag
+ *       combination, all of them might be canceled.
+ *
+ * @return RTE_SUCCESS On success.
+ * @return RTE_ERROR On error.
  */
 RTE_PUBLIC int rte_cancel(rte_ec_handle_t  peer, int tag);
 
 /**
  * @brief unpack data into a user defined buffer
+ *
+ * @param data
+ * @param src
+ * @param offset
+ *
+ * @return RTE_SUCCESS On success.
+ * @return RTE_ERROR On error.
  */
 RTE_PUBLIC int rte_unpack(rte_iovec_t *data,
                           void *src,
                           uint32_t *offset);
 
-/**
+/*
  * @addtogroup rte_p2p Point to Point Messaging
  * @{
  *
@@ -345,34 +371,45 @@ RTE_PUBLIC int rte_unpack(rte_iovec_t *data,
  * progress of non blocking calls can be tracked with a request object.
  */
 
+/**
+ * @brief A wildcard handle that matches any source in the application
+ *        context.
+ */
 RTE_PUBLIC extern rte_ec_handle_t RTE_ANYSOURCE;
-
 
 /**
  * @brief Blocking receive
  *
- * @param[in] rte_iovec_t     iovec array of data elements
- * @param[in] count           number of elements in iovec array
- * @param[in] rte_ec_handle_t source
- * @param[in] uint32_t        tag
- * @param[in] rte_group_t     group
+ * @param[in] iov    Array of rte_iovec_t data elements.
+ * @param[in] count  Number of elements in iovec array.
+ * @param[in] source The source of the message.
+ * @param[in] tag    The message tag.
+ * @param[in] group
+ *
+ * @return RTE_SUCCESS On success.
+ * @return RTE_ERROR On error.
  */
 RTE_PUBLIC int rte_recv(rte_iovec_t *iov,
-                        uint32_t cnt,
-                        rte_ec_handle_t src,
+                        uint32_t count,
+                        rte_ec_handle_t source,
                         uint32_t tag,
                         rte_group_t group);
 /**
  * @brief Start a non blocking receive with callback (no request)
  *
- * @param[in] rte_ec_handle_t    source
- * @param[in] uint32_t           tag
- * @param[in] rte_request_type_t flags
- * @param[in] rte_group_t        group
- * @param[in] rte_request_cb_t   callback function
- * @param[in] void *             callback data
+ * @param[in] source  The source of the message.
+ * @param[in] tag     The message tag.
+ * @param[in] flags
+ * @param[in] group
+ * @param[in] cb_fn   A pointer to a function that shall be called upon
+ *                    reception of the message.
+ * @param[in] cb_data A pointer to a data structure qualifying the
+ *                    receive operation.
+ *
+ * @return RTE_SUCCESS On success.
+ * @return RTE_ERROR On error.
  */
-RTE_PUBLIC int rte_recv_nbcb(rte_ec_handle_t src,
+RTE_PUBLIC int rte_recv_nbcb(rte_ec_handle_t source,
                              uint32_t tag,
                              int flags,
                              rte_group_t group,
@@ -381,46 +418,57 @@ RTE_PUBLIC int rte_recv_nbcb(rte_ec_handle_t src,
 /**
  * @brief Blocking send
  *
- * @param[in] rte_iovec_t     iovec array of data elements
- * @param[in] count           number of elements in iovec array
- * @param[in] rte_ec_handle_t dest
- * @param[in] uint32_t        tag
- * @param[in] rte_group_t     group
+ * @param[in] iov    Array of rte_iovec_t data elements.
+ * @param[in] count  Number of elements in iovec array.
+ * @param[in] dest   The destination for the message.
+ * @param[in] tag    The message tag.
+ * @param[in] group
+ *
+ * @return RTE_SUCCESS On success.
+ * @return RTE_ERROR On error.
  */
 RTE_PUBLIC int rte_send(rte_iovec_t *iov,
-             uint32_t cnt,
-             rte_ec_handle_t dst,
+             uint32_t count,
+             rte_ec_handle_t dest,
              uint32_t tag,
              rte_group_t group);
 
 /**
  * @brief Non-blocking send with function callback
  *
+ * @param[in] iov     Array of rte_iovec_t data elements.
+ * @param[in] count   Number of elements in iovec array.
+ * @param[in] dest    The source of the message.
+ * @param[in] tag     The message tag.
+ * @param[in] flags
+ * @param[in] group
+ * @param[in] cb_fn   A pointer to a function that shall be
+ *                    called upon
+ *                    reception of the message.
+ * @param[in] cb_data A pointer to a data structure
+ *                    qualifying the receive operation.
+ *
+ * @return RTE_SUCCESS On success.
+ * @return RTE_ERROR On error.*
  */
 RTE_PUBLIC int rte_send_nbcb(rte_iovec_t *iov,
-        uint32_t cnt,
-        rte_ec_handle_t dst,
+        uint32_t count,
+        rte_ec_handle_t dest,
         uint32_t tag,
         int flags,
         rte_group_t group,
         rte_request_cb_t cb_fn,
         void * cb_data);
 
-/** @} */ /* end rte_p2p */
-/**
- * @addtogroup ret_coll Collective Communication
- * @{
- */
-
 /**
  * @brief Barrier function
  *
  * @param[in] group                the group to synchronize
  *
- * @return RTE_SUCCESS on success, error code otherwise
+ * @return RTE_SUCCESS On success.
+ * @return RTE_ERROR On error.
  */
 RTE_PUBLIC int rte_barrier(rte_group_t group);
-/** @} */ /* end group rte_coll */
 
 /*--                           SRS Interface                                --*/
 
@@ -525,11 +573,12 @@ typedef char * rte_srs_key_t;
 /**
  * @brief Create a srs session
  *
- * @param[in]     group    the group this session is limited to
- * @param[in]     tag      an arbitrary tag
- * @param[in,out] session  pointer to the session the session object
+ * @param[in]     group    The group this session is limited to.
+ * @param[in]     tag      An arbitrary tag.
+ * @param[in,out] session  A pointer to the session the session object.
  *
- * @return RTE_SUCCESS on success, RTE_ERROR otherwise
+ * @return RTE_SUCCESS On Success.
+ * @return RTE_ERROR On error.
  */
 RTE_PUBLIC int rte_srs_session_create(rte_group_t group,
                                       int tag,
@@ -540,7 +589,8 @@ RTE_PUBLIC int rte_srs_session_create(rte_group_t group,
  *
  * @param[in,out] session  pointer to the session the session object
  *
- * @return RTE_SUCCESS on success, RTE_ERROR otherwise
+ * @return RTE_SUCCESS On Success.
+ * @return RTE_ERROR On error.
  */
 RTE_PUBLIC int rte_srs_session_destroy(rte_srs_session_t session);
 
@@ -548,12 +598,14 @@ RTE_PUBLIC int rte_srs_session_destroy(rte_srs_session_t session);
  * @brief blocking call to request for a key/value pair from a session
  *
  * @param[in]  session  NULL for global exchange, rte_srs_session_t for
- *                      scoped exchange
- * @param[in]  peer     the peer we want the data from
- * @param[in]  key      the key the value will be assigned to
- * @param[out] value    pointer to the data buffer for the given key
+ *                      scoped exchange.
+ * @param[in]  peer     The peer we want the data from.
+ * @param[in]  key      The key the value will be assigned to.
+ * @param[out] value    A pointer to the data buffer for the given key.
+ * @param[out] size     The size of the data buffer.
  *
- * @return RTE_SUCCESS on success, RTE_ERROR otherwise
+ * @return RTE_SUCCESS On Success.
+ * @return RTE_ERROR On error.
  */
 RTE_PUBLIC int rte_srs_get_data(rte_srs_session_t session,
                                 rte_ec_handle_t peer,
@@ -573,7 +625,8 @@ RTE_PUBLIC int rte_srs_get_data(rte_srs_session_t session,
  * @param[in]  value       the data stored in the srs
  * @param[in]  elems       number of elements to store in srs
  *
- * @return RTE_SUCCESS on success, RTE_ERROR otherwise
+ * @return RTE_SUCCESS On Success.
+ * @return RTE_ERROR On error.
  */
 RTE_PUBLIC int rte_srs_set_data(rte_srs_session_t session,
                                 rte_srs_key_t key,
@@ -585,8 +638,9 @@ RTE_PUBLIC int rte_srs_set_data(rte_srs_session_t session,
  *
  * @param[in]  session  NULL for global exchange, rte_srs_session_t for
  *                      scoped exchange
- * @param[out] request the request object
- * @return returns RTE_SUCCESS on success or an error code in case of error
+ *
+ * @return RTE_SUCCESS On Success.
+ * @return RTE_ERROR On error.
  */
 RTE_PUBLIC int rte_srs_exchange_data(rte_srs_session_t session);
 
