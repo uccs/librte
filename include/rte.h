@@ -136,7 +136,9 @@ RTE_PUBLIC extern const struct rte_dt_t rte_bool;
  *****************************/
 
 /**
- * Run time handle - runtime agent context is associated with such a handle
+ * @brief Execution Context (EC) type. 
+ * @details A runtime execution context handle is associated with every
+ *          process in the application.
  */
 typedef void * rte_ec_handle_t;
 
@@ -154,10 +156,10 @@ typedef int      rte_tag_t;
 typedef uint32_t rte_node_index_t;      /* Node index */
 
 /**
- * RTE iovec structure.
- * In order to support heterogeneous runtime environment,
- * instead of length we have data type (type) and number of elements of this
- * type (count)
+ * @brief RTE iovec structure.
+ * @details In order to support heterogeneous runtime environment, the
+ *          rte_iovec_t contains the type of the data and the number of
+ *          elements of that type.
  */
 typedef struct rte_iovec_t {
     void           *iov_base;    /**< pointer to the data */
@@ -194,7 +196,7 @@ RTE_PUBLIC int rte_init(int *argc, char ***argv, rte_group_t *out_group);
  * The rte_finalize function shuts down the runtime. After calling
  * rte_finalize no more calls to rte should be made.
  *
- * @return RTE_SUCCESS On successful initialization.
+ * @return RTE_SUCCESS On success.
  * @return RTE_ERROR On error.
  */
 RTE_PUBLIC int rte_finalize(void);
@@ -216,7 +218,7 @@ RTE_PUBLIC void rte_abort(int error_code, char *exit_description, ...);
 /**
  * @brief Return handle to the calling processes/threads execution context
  *
- * @return rte_ec_handle_t
+ * @return The rte_ec_handle_t of the calling process.
  */
 RTE_PUBLIC rte_ec_handle_t rte_get_my_ec(void);
 
@@ -273,7 +275,7 @@ RTE_PUBLIC extern const int RTE_PROC_ALL_LOCAL;
 RTE_PUBLIC int rte_get_ec_locality(rte_ec_handle_t ec_handle);
 
 /**
- * @brief Compare tow execution contexts.
+ * @brief Compare two execution contexts.
  *
  * @param[in] ec_handle_one The first handle to an execution context.
  * @param[in] ec_handle_two The second handle to an execution context.
@@ -303,7 +305,7 @@ RTE_PUBLIC rte_node_index_t rte_get_ec_index(rte_group_t group,
  *
  * @param[in] ec_handle  The EC handle.
  *
- * @return a pointer to a string holding the RTE's "node" name.
+ * @return A pointer to a string holding the RTE's "node" name.
  * @note The assumption is that the pointer is managed by the RT, and
  *       is valid for the lifetime of the specified execution-context.
  */
@@ -315,14 +317,14 @@ RTE_PUBLIC char * rte_get_ec_node_name(rte_ec_handle_t ec_handle);
  * @param[in] ec_handle  The EC handle.
  *
  * @return pointer to a string holding the execution contexts host name
- * @note The host nme is not necessarily identical to the node name
+ * @note The host name is not necessarily identical to the node name
  */
 RTE_PUBLIC char * rte_get_ec_hostname(rte_ec_handle_t ec_handle);
 
 /**
  * @brief  Get path to session directory.
  *
- * @return pointer to a string holding the full path to applications
+ * @return A pointer to a string holding the full path to applications
  *         session directory
  */
  /* do we need a context here?  */
@@ -334,7 +336,7 @@ RTE_PUBLIC extern const int RTE_RECV_REQUEST_PERSISTENT;
 
 
 /**
- * @brief cancel an outstanding non blocking send/receive operation.
+ * @brief Cancel an outstanding non blocking send/receive operation.
  *
  * @param[in] peer The peer the outstanding send/receive is for
  * @param[in] tag  The tag qualifying the send/receive operation.
@@ -348,7 +350,7 @@ RTE_PUBLIC extern const int RTE_RECV_REQUEST_PERSISTENT;
 RTE_PUBLIC int rte_cancel(rte_ec_handle_t  peer, int tag);
 
 /**
- * @brief unpack data into a user defined buffer
+ * @brief Unpack data into a user defined buffer.
  *
  * @param data
  * @param src
@@ -395,7 +397,7 @@ RTE_PUBLIC int rte_recv(rte_iovec_t *iov,
                         uint32_t tag,
                         rte_group_t group);
 /**
- * @brief Start a non blocking receive with callback (no request)
+ * @brief Start a non blocking receive.
  *
  * @param[in] source  The source of the message.
  * @param[in] tag     The message tag.
@@ -434,7 +436,7 @@ RTE_PUBLIC int rte_send(rte_iovec_t *iov,
              rte_group_t group);
 
 /**
- * @brief Non-blocking send with function callback
+ * @brief Start a non-blocking send.
  *
  * @param[in] iov     Array of rte_iovec_t data elements.
  * @param[in] count   Number of elements in iovec array.
@@ -449,7 +451,7 @@ RTE_PUBLIC int rte_send(rte_iovec_t *iov,
  *                    qualifying the receive operation.
  *
  * @return RTE_SUCCESS On success.
- * @return RTE_ERROR On error.*
+ * @return RTE_ERROR On error.
  */
 RTE_PUBLIC int rte_send_nbcb(rte_iovec_t *iov,
         uint32_t count,
