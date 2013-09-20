@@ -401,7 +401,9 @@ RTE_PUBLIC int rte_recv(rte_iovec_t *iov,
  *
  * @param[in] source  The source of the message.
  * @param[in] tag     The message tag.
- * @param[in] flags
+ * @param[in] flags   The flag is used to specify whether the receive is
+ *                    persistent or not. For a persistent receive set it
+ *                    to RTE_RECV_REQUEST_PERSISTENT otherwise set it to 0.
  * @param[in] group
  * @param[in] cb_fn   A pointer to a function that shall be called upon
  *                    reception of the message.
