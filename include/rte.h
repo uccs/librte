@@ -330,6 +330,7 @@ RTE_PUBLIC char * rte_get_ec_hostname(rte_ec_handle_t ec_handle);
  /* do we need a context here?  */
 RTE_PUBLIC char * rte_get_session_dir(rte_ec_handle_t ec_handle);
 
+typedef void (*rte_request_cb_t) (int status, rte_ec_handle_t peer,
 /* SB: should we rename this? There are no requests in the RTE interface
  * anymore. */
 RTE_PUBLIC extern const int RTE_RECV_REQUEST_PERSISTENT;
