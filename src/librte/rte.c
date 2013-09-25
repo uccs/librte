@@ -139,6 +139,8 @@ int rte_init(int *argc, char ***argv, rte_group_t *out_group)
 {
     /* print environ */
     char *env_val = NULL;
+    char *env_val_cray = NULL;
+    char *env_val_slurm = NULL;
     char *env_name;
 
     /* Initialize rte_fn_table.rte_be_init to NULL.
@@ -148,11 +150,11 @@ int rte_init(int *argc, char ***argv, rte_group_t *out_group)
     /* we need to figure out which back end started us and initialize the
        table accordingly */
 
+#ifdef HAVE_ORTE
     env_name = "OMPI_MCA_orte_local_daemon_uri";
     env_val = getenv (env_name);
 
     if (NULL != env_val) {
-#ifdef HAVE_ORTE
         /* for now we hard code orte */
         rte_fn_table.rte_be_init                = rte_orte_init;
         rte_fn_table.rte_be_finalize            = rte_orte_finalize;
@@ -180,10 +182,14 @@ int rte_init(int *argc, char ***argv, rte_group_t *out_group)
         rte_fn_table.rte_be_srs_set_data        = rte_orte_srs_set_data;
         rte_fn_table.rte_be_srs_exchange_data   = rte_orte_srs_exchange_data;
         rte_fn_table.rte_be_progress            = rte_orte_progress;
+    }
 #endif
-    } else {
+
 #ifdef HAVE_STCI
-        /* for now we assume there is only stci left */
+    env_name = "stci_process_name_self";
+    env_val = getenv (env_name);
+
+    if (NULL != env_val) {
         rte_fn_table.rte_be_init                = rte_stci_init;
         rte_fn_table.rte_be_finalize            = rte_stci_finalize;
         rte_fn_table.rte_be_abort               = rte_stci_abort;
@@ -210,8 +216,49 @@ int rte_init(int *argc, char ***argv, rte_group_t *out_group)
         rte_fn_table.rte_be_srs_set_data        = rte_stci_srs_set_data;
         rte_fn_table.rte_be_srs_exchange_data   = rte_stci_srs_exchange_data;
         rte_fn_table.rte_be_progress            = rte_stci_progress;
-#endif
     }
+#endif
+
+#if HAVE_PMI
+    /* we might have different flavors of PMI so we need to test for all
+     * of them */
+
+    env_name = "CRAY_PMI_INCLUDE_OPTS";
+    env_val_cray = getenv (env_name);
+/*
+    env_name = "--- put something slurm specific here ---";
+    env_val_slurm = getenv (env_name);
+*/
+    if (   NULL != env_val_cray
+        || NULL != env_val_slurm) {
+        rte_fn_table.rte_be_init                = rte_pmi_init;
+        rte_fn_table.rte_be_finalize            = rte_pmi_finalize;
+        rte_fn_table.rte_be_abort               = rte_pmi_abort;
+        rte_fn_table.rte_be_get_my_ec           = rte_pmi_get_my_ec;
+        rte_fn_table.rte_be_group_index_to_ec   = rte_pmi_group_index_to_ec;
+        rte_fn_table.rte_be_group_size          = rte_pmi_group_size;
+        rte_fn_table.rte_be_group_rank          = rte_pmi_group_rank;
+        rte_fn_table.rte_be_get_ec_locality     = rte_pmi_get_ec_locality;
+        rte_fn_table.rte_be_cmp_ec              = rte_pmi_cmp_ec;
+        rte_fn_table.rte_be_get_ec_index        = rte_pmi_get_ec_index;
+        rte_fn_table.rte_be_get_ec_node_name    = rte_pmi_get_ec_node_name;
+        rte_fn_table.rte_be_get_ec_hostname     = rte_pmi_get_ec_hostname;
+        rte_fn_table.rte_be_get_session_dir     = rte_pmi_get_session_dir;
+        rte_fn_table.rte_be_cancel              = rte_pmi_cancel;
+        rte_fn_table.rte_be_unpack              = rte_pmi_unpack;
+        rte_fn_table.rte_be_recv                = rte_pmi_recv;
+        rte_fn_table.rte_be_recv_nbcb           = rte_pmi_recv_nbcb;
+        rte_fn_table.rte_be_send                = rte_pmi_send;
+        rte_fn_table.rte_be_send_nbcb           = rte_pmi_send_nbcb;
+        rte_fn_table.rte_be_barrier             = rte_pmi_barrier;
+        rte_fn_table.rte_be_srs_session_create  = rte_pmi_srs_session_create;
+        rte_fn_table.rte_be_srs_session_destroy = rte_pmi_srs_session_destroy;
+        rte_fn_table.rte_be_srs_get_data        = rte_pmi_srs_get_data;
+        rte_fn_table.rte_be_srs_set_data        = rte_pmi_srs_set_data;
+        rte_fn_table.rte_be_srs_exchange_data   = rte_pmi_srs_exchange_data;
+        rte_fn_table.rte_be_progress            = rte_pmi_progress;
+    }
+#endif
 
     if (NULL == rte_fn_table.rte_be_init) {
         /* something went wrong with the initialization */
