@@ -1,6 +1,9 @@
 /*
- * Copyright (c) 2012       Oak Ridge National Laboratory.
+ * Copyright (c) 2012-2013  Oak Ridge National Laboratory.
  *                          All rights reserved.
+ *
+ * Copyright (c) 2013       UT-Battelle, LLC. All rights reserved.
+ *
  * $COPYRIGHT$
  *
  * Additional copyrights may follow
@@ -22,9 +25,6 @@ int main (int argc, char **argv) {
     int rc                         = 0;
     int retval                     = EXIT_SUCCESS;
     rte_srs_session_t    session1  = NULL;
-    rte_request_handle_t pub_hdl1  = NULL;
-    rte_srs_session_t    session2  = NULL;
-    rte_request_handle_t pub_hdl2  = NULL;
     char buf1[]                    = "buf1";
     rte_iovec_t iov[1];
     rte_iovec_t my_iov;
@@ -38,27 +38,21 @@ int main (int argc, char **argv) {
     rc = rte_init (&argc, &argv, &group_world);
 
     value = getenv("RTE_DEBUG");
-    
+
     if (NULL != value && 0 == strcmp(value, "1")) {
         char hostname[256];
         int value=1;
-        
+
         gethostname (hostname, sizeof(hostname));
-        fprintf (stderr, 
+        fprintf (stderr,
                  "Please attach debugger on hostname:%s to PID:%d, argc:%d",
                  hostname, getpid(), argc);
         while (value++) {
             sleep (1);
         }
     }
-    
+
     rc = rte_srs_session_create (group_world, 0, &session1);
-    if (rc != RTE_SUCCESS) {
-        fprintf (stderr, "Error: Impossible to allocate publish request\n");
-        retval = EXIT_FAILURE;
-        goto cleanup;
-    }
-    rc = rte_srs_session_create (group_world, 1, &session2);
     if (rc != RTE_SUCCESS) {
         fprintf (stderr, "Error: Impossible to allocate publish request\n");
         retval = EXIT_FAILURE;
@@ -75,29 +69,22 @@ int main (int argc, char **argv) {
         retval = EXIT_FAILURE;
         goto cleanup;
     }
-    
+
     rc = rte_srs_exchange_data (session1);
     if (rc != RTE_SUCCESS) {
         fprintf (stderr, "Error: Impossible to prepare data publishing\n");
         retval = EXIT_FAILURE;
         goto cleanup;
     }
-   
-    rc = rte_srs_exchange_data (session2);
-    if (rc != RTE_SUCCESS) {
-        fprintf (stderr, "Error: Impossible to prepare data publishing\n");
-        retval = EXIT_FAILURE;
-        goto cleanup;
-    }
-       
+
     for (i = 0; i < rte_group_size(group_world); i++) {
-        
+
         target_ec = rte_group_index_to_ec (group_world, i);
         rc = rte_srs_get_data (session1, target_ec, "toto1",
                                &databuff, &buff_size);
-        
+
         printf ("(toto1) Buffer size = %d\n", buff_size);
-        
+
         rc = rte_srs_get_data (session1, target_ec, "toto",
                                &databuff, &buff_size);
         if (rc != RTE_SUCCESS) {
@@ -107,23 +94,22 @@ int main (int argc, char **argv) {
         }
 
         printf ("(toto) Buffer size = %d\n", buff_size);
-        
+
         my_iov.iov_base  = NULL;
         my_iov.count     = 0;
         my_iov.type      = rte_datatype_int8_t;
-        
+
         offset = 0;
-        
+
         if (0 < buff_size) {
             rte_unpack (&my_iov, databuff, &offset);
-           
+
             if (NULL != my_iov.iov_base)
                 printf ("%s\n", (char*)my_iov.iov_base);
             else
                 printf ("Warning: my_iov.iov_base is NULL!\n");
         }
-        
-        
+
         if (rc != RTE_SUCCESS) {
             fprintf (stderr, "Error: Impossible to subscribe for data\n");
             retval = EXIT_FAILURE;
