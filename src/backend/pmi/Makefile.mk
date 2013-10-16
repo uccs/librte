@@ -14,6 +14,7 @@ librte_pmi_la_LDFLAGS = ${LIBRTE_PMI_LDFLAGS}
 librte_pmi_la_SOURCES = \
           src/backend/pmi/rte_abort.c \
           src/backend/pmi/rte_barrier.c \
+          src/backend/pmi/rte_dt.c \
           src/backend/pmi/rte_cmp_ec.c \
           src/backend/pmi/rte_finalize.c \
           src/backend/pmi/rte_get_ec_hostname.c \
