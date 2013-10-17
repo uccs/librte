@@ -18,8 +18,17 @@
 #include "rte_config.h"
 
 /* include the headers for the backends  */
+#ifdef HAVE_ORTE
 #include "src/backend/orte/rte_orte.h"
+#endif
+
+#ifdef HAVE_STCI
 #include "src/backend/stci/rte_stci.h"
+#endif
+
+#ifdef HAVE_PMI
+#include "src/backend/pmi/rte_pmi.h"
+#endif
 
 /**
  * @file
@@ -150,6 +159,7 @@ int rte_init(int *argc, char ***argv, rte_group_t *out_group)
     /* we need to figure out which back end started us and initialize the
        table accordingly */
 
+    printf ("Initializing RTE ...\n");
 #ifdef HAVE_ORTE
     env_name = "OMPI_MCA_orte_local_daemon_uri";
     env_val = getenv (env_name);
@@ -219,7 +229,7 @@ int rte_init(int *argc, char ***argv, rte_group_t *out_group)
     }
 #endif
 
-#if HAVE_PMI
+#ifdef HAVE_PMI
     /* we might have different flavors of PMI so we need to test for all
      * of them */
 
@@ -229,6 +239,7 @@ int rte_init(int *argc, char ***argv, rte_group_t *out_group)
     env_name = "--- put something slurm specific here ---";
     env_val_slurm = getenv (env_name);
 */
+    printf ("trying to initialize PMI (%s)\n", env_val_cray);
     if (   NULL != env_val_cray
         || NULL != env_val_slurm) {
         rte_fn_table.rte_be_init                = rte_pmi_init;
@@ -262,6 +273,7 @@ int rte_init(int *argc, char ***argv, rte_group_t *out_group)
 
     if (NULL == rte_fn_table.rte_be_init) {
         /* something went wrong with the initialization */
+        fprintf (stderr, "Error during initialization!\n");
         return RTE_ERROR;
     }
 
