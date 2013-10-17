@@ -206,6 +206,7 @@ AS_IF([test "x$use_pmi" != "xno"],
 #             ],[
 #              AC_MSG_FAILURE([--with-stci was given, but test for stci failed])
 #             ])
+	AC_DEFINE([HAVE_PMI],[1], [Define to build PMI support])
        ])
 AM_CONDITIONAL([HAVE_PMI], [test "x$use_pmi" != xno])
 
