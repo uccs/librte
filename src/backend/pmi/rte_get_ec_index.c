@@ -11,11 +11,15 @@
  */
 
 #include "rte.h"
+#include "rte_pmi_internal.h"
+
 #include <pmi.h>
 
 RTE_PUBLIC rte_node_index_t rte_pmi_get_ec_index(rte_group_t     group,
                                                  rte_ec_handle_t ec_handle)
 {
-    return RTE_ERROR_NOT_IMPLEMENTED;
+    cray_pmi_proc_t *_ec_handle = (cray_pmi_proc_t*)ec_handle;
+    
+    return _ec_handle - rte_pmi_procs;
 }
 
