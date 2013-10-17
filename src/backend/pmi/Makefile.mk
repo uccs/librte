@@ -27,6 +27,7 @@ librte_pmi_la_SOURCES = \
           src/backend/pmi/rte_group_rank.c \
           src/backend/pmi/rte_group_size.c \
           src/backend/pmi/rte_init.c \
+          src/backend/pmi/rte_pmi_internal.c \
           src/backend/pmi/rte_modex.c \
           src/backend/pmi/rte_progress.c \
           src/backend/pmi/rte_recv.c \
