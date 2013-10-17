@@ -12,9 +12,9 @@
 #include "rte.h"
 #include "rte_dt.h"
 
-int rte_orte_unpack (rte_iovec_t     *data,
-                     void            *src,
-                     uint32_t        *offset)
+int rte_pmi_unpack (rte_iovec_t     *data,
+                    void            *src,
+                    uint32_t        *offset)
 {
     int rc = RTE_SUCCESS;
 

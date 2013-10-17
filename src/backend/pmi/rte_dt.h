@@ -44,6 +44,6 @@ const struct rte_dt_t rte_float2     = {rte_pmi_float2, 64};
 const struct rte_dt_t rte_bool       = {rte_pmi_bool, 8};
 
 size_t get_datatype_size(const struct rte_dt_t *dt);
-
+/* int rte_pmi_unpack (rte_iovec_t *data, void *src, uint32_t *offset); */
 #endif
 
