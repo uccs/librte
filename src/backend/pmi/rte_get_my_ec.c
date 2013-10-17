@@ -20,8 +20,8 @@ rte_ec_handle_t rte_pmi_get_my_ec(void)
 {
     int rank, rc;
 
-    PMI_Get_rank (&rank);
+    rc = PMI_Get_rank (&rank);
 
-    return (rte_ec_handle_t)(rte_pmi_procs+(rank*sizeof (cray_pmi_proc_t)));
+    return (rte_ec_handle_t)(rte_pmi_procs+rank);
 }
 
