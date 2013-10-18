@@ -23,5 +23,5 @@ int rte_pmi_unpack (rte_iovec_t     *data,
 
 size_t get_datatype_size(const struct rte_dt_t *dt) 
 {
-    return 0;
+    return dt->size;
 }
