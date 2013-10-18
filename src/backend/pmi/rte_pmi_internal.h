@@ -24,4 +24,9 @@ typedef struct cray_pmi_proc_s {
 extern cray_pmi_proc_t *rte_pmi_procs;
 #endif
 
+typedef struct rte_pmi_srs_session_s {
+    char* name;
+} rte_pmi_srs_session_t;
+typedef rte_pmi_srs_session_t *rte_pmi_srs_session_ptr_t;
+
 #endif /* RTE_PMI_INTERNAL_H */
