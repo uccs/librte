@@ -12,6 +12,18 @@
 #include "rte.h"
 #include "rte_dt.h"
 
+
+const struct rte_dt_t rte_int1       = {rte_pmi_int8, 8};
+const struct rte_dt_t rte_int2       = {rte_pmi_int16, 16};
+const struct rte_dt_t rte_int4       = {rte_pmi_int32, 32};
+const struct rte_dt_t rte_int8       = {rte_pmi_int64, 64};
+const struct rte_dt_t rte_uint1      = {rte_pmi_uint8, 8};
+const struct rte_dt_t rte_uint2      = {rte_pmi_uint16, 16};
+const struct rte_dt_t rte_uint4      = {rte_pmi_uint32, 32};
+const struct rte_dt_t rte_uint8      = {rte_pmi_uint64, 64};
+const struct rte_dt_t rte_float2     = {rte_pmi_float2, 64};
+const struct rte_dt_t rte_bool       = {rte_pmi_bool, 8};
+
 int rte_pmi_unpack (rte_iovec_t     *data,
                     void            *src,
                     uint32_t        *offset)
