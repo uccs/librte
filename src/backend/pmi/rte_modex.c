@@ -48,7 +48,7 @@ RTE_PUBLIC int rte_pmi_srs_session_destroy (rte_srs_session_t session)
  *                      scoped exchange
  * @param[in]  peer     the peer we want the data from
  * @param[in]  key      the key the value will be assigned to
- * @param[out] value    bointer to the data buffer for the given key
+ * @param[out] value    pointer to the data buffer for the given key
  *
  * @return RTE_SUCCESS on success, RTE_ERROR otherwise
  */
