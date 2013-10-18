@@ -52,7 +52,9 @@ RTE_PUBLIC int rte_pmi_srs_session_create (rte_group_t group,
     rc = PMI_KVS_Get_my_name (_session->name, max_length);
     if (PMI_SUCCESS != rc)
         return RTE_ERROR;
-    
+
+    printf ("session name: %s\n", _session->name); 
+
     *session = _session;
     
     return RTE_SUCCESS;
@@ -115,8 +117,10 @@ RTE_PUBLIC int rte_pmi_srs_get_data(rte_srs_session_t session,
     char *_key;
     
     
-    if (NULL == session)
+    if (NULL == session) {
+        printf ("session in NULL");
         return RTE_ERROR_BAD_INPUT;
+    }
     
     _session = (rte_pmi_srs_session_ptr_t)session;
     _ec_handle = (cray_pmi_proc_t*)peer;
@@ -178,28 +182,38 @@ RTE_PUBLIC int rte_pmi_srs_set_data (rte_srs_session_t session,
     char *value_buffer = NULL;
     char *_key;
     
-    if (NULL == session)
+    if (NULL == session) {
+        printf ("rte_pmi_srs_set_data: error -> session is NULL\n");
         return RTE_ERROR_BAD_INPUT;
+    }
     
     _session = (rte_pmi_srs_session_ptr_t)session;
 
     rc = PMI_KVS_Get_value_length_max (&max_value_length);
-    if (PMI_SUCCESS != rc)
+    if (PMI_SUCCESS != rc) {
+	printf ("rte_pmi_srs_set_data: error -> can not get max_value_length\n");
         return RTE_ERROR;
+    }
 
     rc = PMI_KVS_Get_key_length_max (&max_key_length);
-    if (PMI_SUCCESS != rc)
+    if (PMI_SUCCESS != rc) {
+        printf ("rte_pmi_srs_set_data: error -> can not get max_key_length\n");
         return RTE_ERROR;
+    }
 
     /* get the key size */
     keysize = strlen (key);
-    if (keysize > max_key_length)
+    if (keysize > max_key_length) {
+        printf ("rte_pmi_srs_set_data: error -> key to long\n");
         return RTE_ERROR; /* we might want a seperate error type here */
+    }
     
     /* calculate the size of the data */
     datasize = get_datatype_size(iov->type) * iovcnt;
-    if (datasize > max_value_length)
+    if (datasize > max_value_length) {
+        printf ("rte_pmi_srs_set_data: error -> datasize is to high (%d,%d)\n", datasize, max_value_length);
         return RTE_ERROR; /* we might want a seperate error type here */
+    }
 
     value_buffer = malloc (datasize);
     if (NULL == value_buffer)
@@ -207,14 +221,18 @@ RTE_PUBLIC int rte_pmi_srs_set_data (rte_srs_session_t session,
     
     /* get the rank */
     rc = PMI_Get_rank (&rank);
-    if (PMI_SUCCESS != rank)
+    if (PMI_SUCCESS != rc) {
+        printf ("rte_pmi_srs_set_data: error -> can not get rank\n");
         return RTE_ERROR;
+    }
 
     _key = malloc(max_key_length);
     actual_key_length = sprintf (_key, "%s_%d", key, rank);
     
-    if (actual_key_length > max_key_length)
+    if (actual_key_length > max_key_length) {
+        printf ("rte_pmi_srs_set_data: error -> actual key to long\n");
         return RTE_ERROR; /* TODO: add cleanup */
+    }
 
     /* by "hand" for now, we might want to put this in a seperate function */
     for (i=0; i < iovcnt; i++) {
@@ -224,8 +242,10 @@ RTE_PUBLIC int rte_pmi_srs_set_data (rte_srs_session_t session,
     }
 
     rc = PMI_KVS_Put (_session->name, _key, value_buffer);
-    if (PMI_SUCCESS != rc)
+    if (PMI_SUCCESS != rc) {
+        printf ("rte_pmi_srs_set_data: error -> PMI_KVS_Put failed (rc = %d)\n", rc);
         return RTE_ERROR;
+    }
 
     /* I hope the buffer can be freed here */
     free (value_buffer);
