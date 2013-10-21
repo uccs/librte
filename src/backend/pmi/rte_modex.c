@@ -109,7 +109,7 @@ RTE_PUBLIC int rte_pmi_srs_get_data(rte_srs_session_t session,
                                     void **value,
                                     int *size)
 {
-    int max_key_length, actual_key_length, max_value_length, rc, rank;
+    int max_key_length, actual_key_length, maxvalue, rc, rank, vallen;
     size_t keysize;
     rte_pmi_srs_session_ptr_t _session;
     cray_pmi_proc_t *_ec_handle;
@@ -125,7 +125,7 @@ RTE_PUBLIC int rte_pmi_srs_get_data(rte_srs_session_t session,
     _session = (rte_pmi_srs_session_ptr_t)session;
     _ec_handle = (cray_pmi_proc_t*)peer;
     
-    rc = PMI_KVS_Get_value_length_max (&max_value_length);
+    rc = PMI_KVS_Get_value_length_max (&maxvalue);
     if (PMI_SUCCESS != rc)
         return RTE_ERROR;
     
@@ -144,16 +144,21 @@ RTE_PUBLIC int rte_pmi_srs_get_data(rte_srs_session_t session,
     _key = malloc(max_key_length);
     actual_key_length = sprintf (_key, "%s_%d", key, rank);
     
-    value_buffer = malloc (max_value_length);
+    value_buffer = malloc (maxvalue);
     if (NULL == value_buffer)
         return RTE_ERROR_OUT_OF_RESOURCE;
-    
+
+#if RTE_WANT_PMI2 == 0    
     rc = PMI_KVS_Get (_session->name, _key, value_buffer, max_value_length);
     if (PMI_SUCCESS != rc)
         return RTE_ERROR;
-    
-    /* how do I get the length? */
-    
+#else
+    rc = PMI2_KVS_Get(rte_pmi2_info.jobid, PMI2_ID_NULL, _key, value_buffer, PMI2_MAX_VALLEN, &vallen);
+#endif
+
+    *size = vallen;
+    *value = value_buffer;
+ 
     return RTE_SUCCESS;
 }
 
@@ -241,12 +246,20 @@ RTE_PUBLIC int rte_pmi_srs_set_data (rte_srs_session_t session,
                iov[i].iov_base, get_datatype_size(iov->type));
     }
 
+    printf ("session name: %s, key: %s, value_buffer: %s\n", _session->name, _key, value_buffer);
+#if RTE_WANT_PMI2 == 0
     rc = PMI_KVS_Put (_session->name, _key, value_buffer);
     if (PMI_SUCCESS != rc) {
-        printf ("rte_pmi_srs_set_data: error -> PMI_KVS_Put failed (rc = %d)\n", rc);
+        printf ("rte_pmi_srs_set_data: error -> PMI_KVS_Put failed (rc = %d, PMI_FAIL = %d)\n", rc, PMI_FAIL);
         return RTE_ERROR;
     }
-
+#else
+    rc = PMI2_KVS_Put (_key, value_buffer);
+    if (PMI_SUCCESS != rc) {
+        printf ("rte_pmi_srs_set_data: error -> PMI_KVS_Put failed (rc = %d, PMI_FAIL = %d)\n", rc, PMI_FAIL);
+        return RTE_ERROR;
+    }
+#endif
     /* I hope the buffer can be freed here */
     free (value_buffer);
 
@@ -256,10 +269,13 @@ RTE_PUBLIC int rte_pmi_srs_set_data (rte_srs_session_t session,
 RTE_PUBLIC int rte_pmi_srs_exchange_data(rte_srs_session_t session)
 {
     int rc;
-    
+#if RTE_WANT_PMI2 == 0
     rte_pmi_srs_session_ptr_t _session = (rte_pmi_srs_session_ptr_t)session;
     
     rc = PMI_KVS_Commit (_session->name);
+#else
+    rc = PMI2_KVS_Fence ();
+#endif
     if (PMI_SUCCESS != rc)
         return RTE_ERROR;
     
