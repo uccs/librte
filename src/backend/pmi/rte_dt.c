@@ -30,6 +30,8 @@ int rte_pmi_unpack (rte_iovec_t     *data,
 {
     int rc = RTE_SUCCESS;
 
+    data->iov_base = src;
+
     return rc;
 }
 
