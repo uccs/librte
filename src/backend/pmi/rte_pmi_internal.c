@@ -20,6 +20,8 @@
 cray_pmi_proc_t *rte_pmi_procs;
 #endif
 
+rte_pmi2_info_t rte_pmi2_info;
+
 int rte_pmi_proclist_init ()
 {
     int process_group_size;
