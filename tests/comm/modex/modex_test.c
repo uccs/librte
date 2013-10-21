@@ -80,10 +80,6 @@ int main (int argc, char **argv) {
     for (i = 0; i < rte_group_size(group_world); i++) {
 
         target_ec = rte_group_index_to_ec (group_world, i);
-        rc = rte_srs_get_data (session1, target_ec, "toto1",
-                               &databuff, &buff_size);
-
-        printf ("(toto1) Buffer size = %d\n", buff_size);
 
         rc = rte_srs_get_data (session1, target_ec, "toto",
                                &databuff, &buff_size);
