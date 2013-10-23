@@ -31,7 +31,7 @@ RTE_PUBLIC int rte_pmi_init(int *argc, char ***argv, rte_group_t *out_group)
        return RTE_ERROR;
    }
 
-   rc = PMI2_Job_GetId (&rte_pmi2_info.jobid, 16);
+   rc = PMI2_Job_GetId (rte_pmi2_info.jobid, 16);
 #endif
 
    /* set up the RTE proc table */
