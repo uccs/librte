@@ -185,18 +185,18 @@ AS_IF([test "x$use_pmi" != "xno"],
        pmi_include_path="/usr/include"
        AS_IF([test "x$use_pmi" != "xyes"],
              [pmi_path=$use_pmi
-              pmi_lib_path="$pmi_path/lib"
-              pmi_include_path="$pmi_path/include"])
+              pmi_lib_path="$pmi_lib_path"
+              pmi_include_path="$pmi_include_path"])
        AS_IF([test "x$use_pmi_lib" != "xno"],
              [pmi_lib_path=$use_pmi_lib])
        AS_IF([test "x$use_pmi_include" != "xno"],
              [pmi_include_path=$use_pmi_include])
        #dnl set LDFLAGS for the check
-       LDFLAGS="-L$stci_lib_path"
-       AC_CHECK_LIB([stci], [stci_init])
-       AS_IF([test "$ac_cv_lib_stci_stci_init" = yes],
+       LDFLAGS="-L$pmi_lib_path"
+       AC_CHECK_LIB([pmi], [PMI_Init])
+       AS_IF([test "$ac_cv_lib_pmi_PMI_Init" = yes],
              [rte_pmi_cflags=" -I$pmi_include_path"
-              AC_SUBST([LIBRTE_PMI_CFLAGS],[$rte_stci_cflags])
+              AC_SUBST([LIBRTE_PMI_CFLAGS],[$rte_pmi_cflags])
               AC_SUBST([LIBRTE_PMI_LIBADD], ["-lpmi"])
               AC_SUBST([LIBRTE_PMI_LDFLAGS],["-L$pmi_lib_path"])
               AC_DEFINE([HAVE_PMI], [1], [Define if we have PM])
