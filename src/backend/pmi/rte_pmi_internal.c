@@ -16,9 +16,7 @@
 #include <stdlib.h>
 
 /* this array holds the execution contects for all the ranks */
-#if HAVE_CRAY_PMI
-cray_pmi_proc_t *rte_pmi_procs;
-#endif
+rte_pmi_proc_t *rte_pmi_procs;
 
 rte_pmi2_info_t rte_pmi2_info;
 
@@ -29,10 +27,10 @@ int rte_pmi_proclist_init ()
     PMI_Get_size (&process_group_size);
 
     /* allocate memory for the  ss structures */
-    rte_pmi_procs = malloc (process_group_size * sizeof (cray_pmi_proc_t));
+    rte_pmi_procs = malloc (process_group_size * sizeof (rte_pmi_proc_t));
 
     /* initialize to 0 */
-    memset (rte_pmi_procs, 0, process_group_size * sizeof (cray_pmi_proc_t));
+    memset (rte_pmi_procs, 0, process_group_size * sizeof (rte_pmi_proc_t));
 
     return RTE_SUCCESS;
 }

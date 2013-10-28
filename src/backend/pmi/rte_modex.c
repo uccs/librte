@@ -109,10 +109,10 @@ RTE_PUBLIC int rte_pmi_srs_get_data(rte_srs_session_t session,
                                     void **value,
                                     int *size)
 {
-    int max_key_length, actual_key_length, maxvalue, rc, rank, vallen;
+    int max_key_length, actual_key_length, maxvalue, rc, rank, vallen, max_value_length;
     size_t keysize;
     rte_pmi_srs_session_ptr_t _session;
-    cray_pmi_proc_t *_ec_handle;
+    rte_pmi_proc_t *_ec_handle;
     char *value_buffer = NULL;
     char *_key;
     
@@ -123,26 +123,36 @@ RTE_PUBLIC int rte_pmi_srs_get_data(rte_srs_session_t session,
     }
     
     _session = (rte_pmi_srs_session_ptr_t)session;
-    _ec_handle = (cray_pmi_proc_t*)peer;
+    _ec_handle = (rte_pmi_proc_t*)peer;
     
     rc = PMI_KVS_Get_value_length_max (&maxvalue);
-    if (PMI_SUCCESS != rc)
+    if (PMI_SUCCESS != rc) {
+        fprintf (stderr, "PMI_KVS_Get_value_length_max failed (rc = %d)", rc);
+        fflush (stderr);
         return RTE_ERROR;
+    }
     
     rc = PMI_KVS_Get_key_length_max (&max_key_length);
-    if (PMI_SUCCESS != rc)
+    if (PMI_SUCCESS != rc) {
+        fprintf (stderr, "PMI_KVS_Get_key_length_max failed (rc = %d)", rc);
+        fflush (stderr);
         return RTE_ERROR;
+    }
     
     /* get the key size */
     keysize = strlen (key);
-    if (keysize > max_key_length)
+    if (keysize > max_key_length) {
+        fprintf (stderr, "key is to long");
+        fflush (stderr);
         return RTE_ERROR; /* we might want a seperate error type here */
+    }
     
     /* get the rank */
     rank = _ec_handle - rte_pmi_procs;
     
     _key = malloc(max_key_length);
     actual_key_length = sprintf (_key, "%s_%d", key, rank);
+    fprintf (stderr, "Fetching key %s\n", _key);
     
     value_buffer = malloc (maxvalue);
     if (NULL == value_buffer)
@@ -150,8 +160,15 @@ RTE_PUBLIC int rte_pmi_srs_get_data(rte_srs_session_t session,
 
 #if RTE_WANT_PMI2 == 0    
     rc = PMI_KVS_Get (_session->name, _key, value_buffer, max_value_length);
-    if (PMI_SUCCESS != rc)
+    if (PMI_SUCCESS != rc) {
+        fprintf (stderr, "PMI_KVS_Get failed (rc = %d)", rc);
+        fflush (stderr);
         return RTE_ERROR;
+    }
+#if HAVE_SLURM_PMI
+    /* if we are running on top of slurm we need a barrier to actually publish the data */
+    PMI_Barrier ();
+#endif
 #else
     rc = PMI2_KVS_Get(rte_pmi2_info.jobid, PMI2_ID_NULL, _key, value_buffer, PMI2_MAX_VALLEN, &vallen);
 #endif
@@ -276,8 +293,11 @@ RTE_PUBLIC int rte_pmi_srs_exchange_data(rte_srs_session_t session)
 #else
     rc = PMI2_KVS_Fence ();
 #endif
-    if (PMI_SUCCESS != rc)
+    if (PMI_SUCCESS != rc) {
+        fprintf (stderr, "rc = %d", rc);
+        fflush (stderr);
         return RTE_ERROR;
+    }
     
     return RTE_SUCCESS;
 }

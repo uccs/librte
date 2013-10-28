@@ -235,10 +235,10 @@ int rte_init(int *argc, char ***argv, rte_group_t *out_group)
 
     env_name = "CRAY_PMI_INCLUDE_OPTS";
     env_val_cray = getenv (env_name);
-/*
-    env_name = "--- put something slurm specific here ---";
+
+    env_name = "SLURM_JOB_ID";
     env_val_slurm = getenv (env_name);
-*/
+
     printf ("trying to initialize PMI (%s)\n", env_val_cray);
     if (   NULL != env_val_cray
         || NULL != env_val_slurm) {
