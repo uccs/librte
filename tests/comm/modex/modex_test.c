@@ -116,6 +116,8 @@ int main (int argc, char **argv) {
     fprintf (stdout, "Data received\n");
 
 cleanup:
+    fflush (stderr);
+    fflush (stdout);
     rte_finalize ();
 
     return retval;
