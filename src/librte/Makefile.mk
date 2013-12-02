@@ -6,6 +6,9 @@ lib_LTLIBRARIES += librte.la
 librte_la_SOURCES = \
     src/librte/rte.c
 
+include_HEADERS = \
+    include/rte.h
+
 librte_la_LIBADD = \
     ${librte_BACKENDS} \
     ${librte_BACKEND_LIBS} \
