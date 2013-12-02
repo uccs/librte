@@ -131,6 +131,17 @@ RTE_PUBLIC extern const struct rte_dt_t rte_bool;
 #define rte_datatype_float_t  RTE_PREDEFINED_GLOBAL (rte_datatype_t, rte_float2)
 #define rte_datatype_bool_t   RTE_PREDEFINED_GLOBAL (rte_datatype_t, rte_bool)
 
+#define rte_datatype_int1   RTE_PREDEFINED_GLOBAL (rte_datatype_t, rte_int1)
+#define rte_datatype_int2   RTE_PREDEFINED_GLOBAL (rte_datatype_t, rte_int2)
+#define rte_datatype_int4   RTE_PREDEFINED_GLOBAL (rte_datatype_t, rte_int4)
+#define rte_datatype_int8   RTE_PREDEFINED_GLOBAL (rte_datatype_t, rte_int8)
+#define rte_datatype_uint1  RTE_PREDEFINED_GLOBAL (rte_datatype_t, rte_uint1)
+#define rte_datatype_uint2  RTE_PREDEFINED_GLOBAL (rte_datatype_t, rte_uint2)
+#define rte_datatype_uint4  RTE_PREDEFINED_GLOBAL (rte_datatype_t, rte_uint4)
+#define rte_datatype_uint8  RTE_PREDEFINED_GLOBAL (rte_datatype_t, rte_uint8)
+#define rte_datatype_float  RTE_PREDEFINED_GLOBAL (rte_datatype_t, rte_float2)
+#define rte_datatype_bool   RTE_PREDEFINED_GLOBAL (rte_datatype_t, rte_bool)
+
 /*****************************
  * Interface data structures *
  *****************************/
