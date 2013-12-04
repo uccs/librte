@@ -205,7 +205,7 @@ AS_IF([test "x$use_pmi" != "xno"],
              ])
        #dnl check if we are running on a cray
        AC_CHECK_LIB([pmi], [PMI_CRAY_Get_rank_in_app])
-       AS_IF([test "ac_cv_lib_pmi_PMI_CRAY_Get_rank_in_app" = yes],
+       AS_IF([test "$ac_cv_lib_pmi_PMI_CRAY_Get_rank_in_app" = yes],
              [#dnl we have the cray extensions so it should be save to assume
               #dnl that we are running on a cray box
               rte_cray_pmi=1
