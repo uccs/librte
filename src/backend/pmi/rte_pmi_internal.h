@@ -14,8 +14,8 @@
 
 /* we hardcode this in the moment
  * TODO: put test in configure.ac to figure out if we have PMI on cray or slurm */
-#define HAVE_CRAY_PMI 0
-#define HAVE_SLURM_PMI 1
+#define HAVE_CRAY_PMI 1
+#define HAVE_SLURM_PMI 0
 
 #if HAVE_CRAY_PMI
     typedef struct cray_pmi_proc_s {

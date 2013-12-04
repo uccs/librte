@@ -21,7 +21,13 @@
 
 char * rte_pmi_get_ec_node_name(rte_ec_handle_t ec_handle)
 {
+#if HAVE_SLURM_PMI
     rte_pmi_proc_t *_ec_handle = (slurm_pmi_proc_t*)ec_handle;
+#endif
+
+#if HAVE_CRAY_PMI
+    rte_pmi_proc_t *_ec_handle = (cray_pmi_proc_t*)ec_handle;
+#endif
 
     /* the names are initialized lazyly so check if it is initialized yet */
     if (NULL == _ec_handle->node_name) {
@@ -31,7 +37,7 @@ char * rte_pmi_get_ec_node_name(rte_ec_handle_t ec_handle)
         rank = _ec_handle - rte_pmi_procs;
 #if HAVE_CRAY_PMI
         rc = PMI_Get_nid (rank, &nid);
-	_ec_handle->node_name = malloc (16);
+		_ec_handle->node_name = malloc (16);
         sprintf (_ec_handle->node_name, "nid%d", nid);
 #endif
 

@@ -151,7 +151,9 @@ RTE_PUBLIC int rte_pmi_srs_get_data(rte_srs_session_t session,
     rank = _ec_handle - rte_pmi_procs;
     
     _key = malloc(max_key_length);
+	memset(_key, 0, max_key_length);
     actual_key_length = sprintf (_key, "%s_%d", key, rank);
+	actual_key_length = strlen(_key);
     fprintf (stderr, "Fetching key %s\n", _key);
     
     value_buffer = malloc (maxvalue);
@@ -249,7 +251,9 @@ RTE_PUBLIC int rte_pmi_srs_set_data (rte_srs_session_t session,
     }
 
     _key = malloc(max_key_length);
+	memset(_key, 0, max_key_length);
     actual_key_length = sprintf (_key, "%s_%d", key, rank);
+	actual_key_length = strlen(_key);
     
     if (actual_key_length > max_key_length) {
         printf ("rte_pmi_srs_set_data: error -> actual key to long\n");
