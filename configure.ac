@@ -175,7 +175,7 @@ LIBS=$SAVE_LIBS
 
 # Check for pmi libraries and flavors
 AS_IF([test "x$use_pmi" != "xno"],
-       # this is hardcoded for titan in the moment
+## this is hardcoded for titan in the moment
 ##       AC_SUBST([LIBRTE_PMI_CFLAGS],[$CRAY_PMI_INCLUDE_OPTS])
 ##       AC_SUBST([LIBRTE_PMI_LDFLAGS],[$CRAY_PMI_POST_LINK_OPTS])
 ##       AC_SUBST([LIBRTE_PMI_LIBADD], ["-lpmi"])
@@ -203,6 +203,21 @@ AS_IF([test "x$use_pmi" != "xno"],
              ],[
               AC_MSG_FAILURE([--with-pmi was given, but test for PMI failed])
              ])
+       #dnl check if we are running on a cray
+       AC_CHECK_LIB([pmi], [PMI_CRAY_Get_rank_in_app])
+       AS_IF([test "ac_cv_lib_pmi_PMI_CRAY_Get_rank_in_app" = yes],
+             [#dnl we have the cray extensions so it should be save to assume
+              #dnl that we are running on a cray box
+              rte_cray_pmi=1
+              rte_slurm_pmi=0
+             ],[#dnl if we are not running on a cray it must be a slurm box
+              rte_cray_pmi=0
+              rte_slurm_pmi=1
+             ])
+       AC_DEFINE_UNQUOTED([HAVE_CRAY_PMI], [$rte_cray_pmi],
+                          [Build RTE for the cray])
+       AC_DEFINE_UNQUOTED([HAVE_SLURM_PMI], [$rte_slurm_pmi],
+                          [Build rte for slurm])
        ])
 AM_CONDITIONAL([HAVE_PMI], [test "x$use_pmi" != xno])
 

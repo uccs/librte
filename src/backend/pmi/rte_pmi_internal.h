@@ -12,10 +12,7 @@
 #ifndef RTE_PMI_INTERNAL_H
 #define RTE_PMI_INTERNAL_H
 
-/* we hardcode this in the moment
- * TODO: put test in configure.ac to figure out if we have PMI on cray or slurm */
-#define HAVE_CRAY_PMI 1
-#define HAVE_SLURM_PMI 0
+#include "rte_config.h"
 
 #if HAVE_CRAY_PMI
     typedef struct cray_pmi_proc_s {
