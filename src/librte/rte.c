@@ -196,7 +196,7 @@ int rte_init(int *argc, char ***argv, rte_group_t *out_group)
 #endif
 
 #ifdef HAVE_STCI
-    env_name = "stci_process_name_self";
+    env_name = "OMPI_MCA_stci_process_name_self";
     env_val = getenv (env_name);
 
     if (NULL != env_val) {

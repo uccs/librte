@@ -131,6 +131,9 @@ RTE_PUBLIC extern const struct rte_dt_t rte_bool;
 #define rte_datatype_float_t  RTE_PREDEFINED_GLOBAL (rte_datatype_t, rte_float2)
 #define rte_datatype_bool_t   RTE_PREDEFINED_GLOBAL (rte_datatype_t, rte_bool)
 
+
+/* This defines remain for compatibility reasons. They may be removed at any time
+ * Please use the bit sized defines in new code */
 #define rte_datatype_int1   RTE_PREDEFINED_GLOBAL (rte_datatype_t, rte_int1)
 #define rte_datatype_int2   RTE_PREDEFINED_GLOBAL (rte_datatype_t, rte_int2)
 #define rte_datatype_int4   RTE_PREDEFINED_GLOBAL (rte_datatype_t, rte_int4)
