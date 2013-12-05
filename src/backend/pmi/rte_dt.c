@@ -12,6 +12,8 @@
 #include "rte.h"
 #include "rte_dt.h"
 
+#include <string.h>
+
 
 const struct rte_dt_t rte_int1       = {rte_pmi_int8, 8};
 const struct rte_dt_t rte_int2       = {rte_pmi_int16, 16};
@@ -29,8 +31,11 @@ int rte_pmi_unpack (rte_iovec_t     *data,
                     uint32_t        *offset)
 {
     int rc = RTE_SUCCESS;
+    size_t dt_length;
 
-    data->iov_base = src;
+    dt_length = get_datatype_size (data->type);
+    memcpy (data->iov_base, src, dt_length);
+    offset += dt_length;
 
     return rc;
 }
