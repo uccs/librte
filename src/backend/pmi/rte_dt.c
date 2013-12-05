@@ -33,8 +33,13 @@ int rte_pmi_unpack (rte_iovec_t     *data,
     int rc = RTE_SUCCESS;
     size_t dt_length;
 
+    char* buffptr;
+
+    buffptr = src;
+    buffptr+=*offset;
+
     dt_length = get_datatype_size (data->type);
-    memcpy (data->iov_base, src, dt_length);
+    memcpy ( buffptr, src, dt_length);
     offset += dt_length;
 
     return rc;
