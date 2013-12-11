@@ -234,7 +234,7 @@ RTE_PUBLIC int rte_pmi_srs_set_data (rte_srs_session_t session,
     
     /* calculate the size of the data */
     for (i=0; i < iovcnt; i++) {
-        datasize += get_datatype_size(iov[i]->type) *iov[i].count;
+        datasize += get_datatype_size(iov[i].type) *iov[i].count;
     }
 
     if (datasize > max_value_length) {
@@ -266,8 +266,8 @@ RTE_PUBLIC int rte_pmi_srs_set_data (rte_srs_session_t session,
     /* by "hand" for now, we might want to put this in a seperate function */
     for (i=0; i < iovcnt; i++) {
         /* no packing here in the moment */
-        memcpy(value_buffer + (i*get_datatype_size(iov->type)),
-               iov[i].iov_base, get_datatype_size(iov->type));
+        memcpy(value_buffer + (i*get_datatype_size(iov[i].type)),
+               iov[i].iov_base, get_datatype_size(iov[i].type));
     }
 
     printf ("session name: %s, key: %s, value_buffer: %s\n", _session->name, _key, value_buffer);
