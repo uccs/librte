@@ -32,15 +32,12 @@ int rte_pmi_unpack (rte_iovec_t     *data,
 {
     int rc = RTE_SUCCESS, i;
     size_t dt_length;
+    char *base_ptr = NULL;
 
-    char *base_ptr, *src_ptr;
-    base_ptr = data->iov_base;
-    src_ptr = src;
-
-    dt_length = get_datatype_size (data->type);
-    
     for (i = 0; i < data->count; i++) {
-        memcpy ( base_ptr + *offset, src_ptr + *offset, dt_length);
+        base_ptr = data[i].iov_base;
+        dt_length = get_datatype_size (data[i].type) * data[i].count;
+        memcpy (base_ptr, (char *)src + *offset, dt_length);
         *offset += dt_length;
     }
 
