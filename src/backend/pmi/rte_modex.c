@@ -201,7 +201,7 @@ RTE_PUBLIC int rte_pmi_srs_set_data (rte_srs_session_t session,
                                      int iovcnt)
 {
     int max_key_length, actual_key_length, max_value_length, rc, i, rank;
-    size_t datasize, keysize;
+    size_t datasize = 0, keysize = 0;
     rte_pmi_srs_session_ptr_t _session;
     char *value_buffer = NULL;
     char *_key;
@@ -233,7 +233,10 @@ RTE_PUBLIC int rte_pmi_srs_set_data (rte_srs_session_t session,
     }
     
     /* calculate the size of the data */
-    datasize = get_datatype_size(iov->type) * iovcnt;
+    for (i=0; i < iovcnt; i++) {
+        datasize += get_datatype_size(iov[i]->type) *iov[i].count;
+    }
+
     if (datasize > max_value_length) {
         printf ("rte_pmi_srs_set_data: error -> datasize is to high (%d,%d)\n", datasize, max_value_length);
         return RTE_ERROR; /* we might want a seperate error type here */
