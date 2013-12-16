@@ -200,10 +200,11 @@ RTE_PUBLIC int rte_pmi_srs_set_data (rte_srs_session_t session,
                                      rte_iovec_t *iov,
                                      int iovcnt)
 {
-    int max_key_length, actual_key_length, max_value_length, rc, i, rank;
+    int max_key_length, actual_key_length, max_value_length, rc, i, j, rank;
     size_t datasize = 0, keysize = 0;
     rte_pmi_srs_session_ptr_t _session;
     char *value_buffer = NULL;
+    char *value_buffer_ptr = NULL;
     char *_key;
     
     if (NULL == session) {
@@ -234,15 +235,17 @@ RTE_PUBLIC int rte_pmi_srs_set_data (rte_srs_session_t session,
     
     /* calculate the size of the data */
     for (i=0; i < iovcnt; i++) {
-        datasize += get_datatype_size(iov[i].type) *iov[i].count;
+        datasize += get_datatype_size(iov[i].type) * iov[i].count;
     }
+
+    datasize += 1;
 
     if (datasize > max_value_length) {
         printf ("rte_pmi_srs_set_data: error -> datasize is to high (%d,%d)\n", datasize, max_value_length);
         return RTE_ERROR; /* we might want a seperate error type here */
     }
 
-    value_buffer = malloc (datasize);
+    value_buffer_ptr = value_buffer = malloc (datasize);
     if (NULL == value_buffer)
         return RTE_ERROR_OUT_OF_RESOURCE;
     
@@ -264,28 +267,74 @@ RTE_PUBLIC int rte_pmi_srs_set_data (rte_srs_session_t session,
     }
 
     /* by "hand" for now, we might want to put this in a seperate function */
+
+    /* pmi treats the buffer as a strin -> we can not have 0 bytes in there
+       or we will lose data
+     */
     for (i=0; i < iovcnt; i++) {
-        /* no packing here in the moment */
-        memcpy(value_buffer + (i*get_datatype_size(iov[i].type)),
-               iov[i].iov_base, get_datatype_size(iov[i].type));
+        for (j=0; j < iov[i].count; j++) {
+            switch (iov[i].type->type) {
+                case rte_pmi_bool:
+                case rte_pmi_int8:
+                case rte_pmi_uint8:
+                {
+                    int8_t *tmp_buffer = (int8_t*)value_buffer;
+                    *tmp_buffer = 0xf0 ^ (*((int8_t*)(iov[i].iov_base + (j * get_datatype_size(iov[i].type)) )));
+                    value_buffer++;
+                    break;
+                }
+                case rte_pmi_int16:
+                case rte_pmi_uint16:
+                {
+                    int16_t *tmp_buffer = (int16_t*)value_buffer;
+                    *tmp_buffer = 0xf0f0 ^ (*((int16_t*)(iov[i].iov_base + (j * get_datatype_size(iov[i].type)) )));
+                    value_buffer += get_datatype_size(iov[i].type);
+                    break;
+                }
+                case rte_pmi_int32:
+                case rte_pmi_uint32:
+                {
+                    int32_t *tmp_buffer = (int32_t*)value_buffer;
+                    *tmp_buffer = 0xf0f0f0f0 ^ (*((int32_t*)(iov[i].iov_base + (j * get_datatype_size(iov[i].type)) )));
+                    value_buffer += get_datatype_size(iov[i].type);
+                    break;
+                }
+                case rte_pmi_int64:
+                case rte_pmi_uint64:
+                {
+                    int64_t *tmp_buffer = (int64_t*)value_buffer;
+                    *tmp_buffer = 0xf0f0f0f0f0f0f0f0 ^ (*((int64_t*)(iov[i].iov_base + (j * get_datatype_size(iov[i].type)) )));
+                    value_buffer += get_datatype_size(iov[i].type);
+                    break;
+                }
+                case rte_pmi_float2:
+                    break;
+            }
+
+	/* no packing here in the moment */
+//        memcpy(value_buffer + (i*get_datatype_size(iov[i].type)),
+//               iov[i].iov_base, get_datatype_size(iov[i].type));
+        }
     }
+
+    value_buffer = "\0";
 
     printf ("session name: %s, key: %s, value_buffer: %s\n", _session->name, _key, value_buffer);
 #if RTE_WANT_PMI2 == 0
-    rc = PMI_KVS_Put (_session->name, _key, value_buffer);
+    rc = PMI_KVS_Put (_session->name, _key, value_buffer_ptr);
     if (PMI_SUCCESS != rc) {
         printf ("rte_pmi_srs_set_data: error -> PMI_KVS_Put failed (rc = %d, PMI_FAIL = %d)\n", rc, PMI_FAIL);
         return RTE_ERROR;
     }
 #else
-    rc = PMI2_KVS_Put (_key, value_buffer);
+    rc = PMI2_KVS_Put (_key, value_buffer_ptr);
     if (PMI_SUCCESS != rc) {
         printf ("rte_pmi_srs_set_data: error -> PMI_KVS_Put failed (rc = %d, PMI_FAIL = %d)\n", rc, PMI_FAIL);
         return RTE_ERROR;
     }
 #endif
     /* I hope the buffer can be freed here */
-    free (value_buffer);
+    free (value_buffer_ptr);
 
     return RTE_SUCCESS;
 }
