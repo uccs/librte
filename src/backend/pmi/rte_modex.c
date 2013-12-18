@@ -238,14 +238,14 @@ RTE_PUBLIC int rte_pmi_srs_set_data (rte_srs_session_t session,
         datasize += get_datatype_size(iov[i].type) * iov[i].count;
     }
 
-    datasize += 1;
+//   datasize += 1;
 
-    if (datasize > max_value_length) {
-        printf ("rte_pmi_srs_set_data: error -> datasize is to high (%d,%d)\n", datasize, max_value_length);
-        return RTE_ERROR; /* we might want a seperate error type here */
-    }
+//    if (datasize > max_value_length) {
+//        printf ("rte_pmi_srs_set_data: error -> datasize is to high (%d,%d)\n", datasize, max_value_length);
+//        return RTE_ERROR; /* we might want a seperate error type here */
+//    }
 
-    value_buffer_ptr = value_buffer = malloc (datasize);
+    value_buffer_ptr = value_buffer = malloc (max_value_length);
     if (NULL == value_buffer)
         return RTE_ERROR_OUT_OF_RESOURCE;
     
@@ -273,51 +273,46 @@ RTE_PUBLIC int rte_pmi_srs_set_data (rte_srs_session_t session,
      */
     for (i=0; i < iovcnt; i++) {
         for (j=0; j < iov[i].count; j++) {
+            int nb;
             switch (iov[i].type->type) {
                 case rte_pmi_bool:
                 case rte_pmi_int8:
+                    nb = sprintf (value_buffer, "%d,", *(int8_t*)((iov[i].iov_base) + j * get_datatype_size(iov[i].type)));
+                    value_buffer += nb;
+                    break;
                 case rte_pmi_uint8:
-                {
-                    int8_t *tmp_buffer = (int8_t*)value_buffer;
-                    *tmp_buffer = 0xf0 ^ (*((int8_t*)(iov[i].iov_base + (j * get_datatype_size(iov[i].type)) )));
-                    value_buffer++;
+                    nb = sprintf (value_buffer, "%d,", (uint8_t*)(iov[i].iov_base) + j * get_datatype_size(iov[i].type));
+                    value_buffer += nb;
                     break;
-                }
                 case rte_pmi_int16:
+                    nb = sprintf (value_buffer, "%d", (int16_t*)(iov[i].iov_base) + j * get_datatype_size(iov[i].type));
+                    value_buffer += nb * get_datatype_size(iov[i].type);
+                    break;
                 case rte_pmi_uint16:
-                {
-                    int16_t *tmp_buffer = (int16_t*)value_buffer;
-                    *tmp_buffer = 0xf0f0 ^ (*((int16_t*)(iov[i].iov_base + (j * get_datatype_size(iov[i].type)) )));
-                    value_buffer += get_datatype_size(iov[i].type);
+                    nb = sprintf (value_buffer, "%d", (uint16_t*)(iov[i].iov_base) + j * get_datatype_size(iov[i].type));
+                    value_buffer += nb * get_datatype_size(iov[i].type);
                     break;
-                }
                 case rte_pmi_int32:
+                    nb = sprintf (value_buffer, "%d", (int32_t*)(iov[i].iov_base) + j * get_datatype_size(iov[i].type));
+                    value_buffer += nb * get_datatype_size(iov[i].type);
+                    break;
                 case rte_pmi_uint32:
-                {
-                    int32_t *tmp_buffer = (int32_t*)value_buffer;
-                    *tmp_buffer = 0xf0f0f0f0 ^ (*((int32_t*)(iov[i].iov_base + (j * get_datatype_size(iov[i].type)) )));
-                    value_buffer += get_datatype_size(iov[i].type);
+                    nb = sprintf (value_buffer, "%d", (int32_t*)(iov[i].iov_base) + j * get_datatype_size(iov[i].type));
+                    value_buffer += nb * get_datatype_size(iov[i].type);
                     break;
-                }
                 case rte_pmi_int64:
-                case rte_pmi_uint64:
-                {
-                    int64_t *tmp_buffer = (int64_t*)value_buffer;
-                    *tmp_buffer = 0xf0f0f0f0f0f0f0f0 ^ (*((int64_t*)(iov[i].iov_base + (j * get_datatype_size(iov[i].type)) )));
-                    value_buffer += get_datatype_size(iov[i].type);
+                    nb = sprintf (value_buffer, "%ld", (int64_t*)(iov[i].iov_base) + j * get_datatype_size(iov[i].type));
+                    value_buffer += nb * get_datatype_size(iov[i].type);
                     break;
-                }
+                case rte_pmi_uint64:
+                    nb = sprintf (value_buffer, "%ld", (uint64_t*)(iov[i].iov_base) + j * get_datatype_size(iov[i].type));
+                    value_buffer += nb * get_datatype_size(iov[i].type);
+                    break;
                 case rte_pmi_float2:
                     break;
             }
-
-	/* no packing here in the moment */
-//        memcpy(value_buffer + (i*get_datatype_size(iov[i].type)),
-//               iov[i].iov_base, get_datatype_size(iov[i].type));
         }
     }
-
-    value_buffer = "\0";
 
     printf ("session name: %s, key: %s, value_buffer: %s\n", _session->name, _key, value_buffer);
 #if RTE_WANT_PMI2 == 0
