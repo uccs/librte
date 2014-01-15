@@ -121,7 +121,9 @@ RTE_PUBLIC int rte_pmi_srs_get_data(rte_srs_session_t session,
         printf ("session in NULL");
         return RTE_ERROR_BAD_INPUT;
     }
-    
+
+    if (NULL == peer) return RTE_ERROR_BAD_INPUT;
+
     _session = (rte_pmi_srs_session_ptr_t)session;
     _ec_handle = (rte_pmi_proc_t*)peer;
     
