@@ -33,8 +33,7 @@ static int prep_buffer (char* current, char** next)
 
     tmp = strchr (current, ',');
     *next = tmp + 1;
-    *tmp = 0;
-
+    
     return RTE_SUCCESS;
 }
 
@@ -63,7 +62,7 @@ int rte_pmi_unpack (rte_iovec_t     *data,
                     break;
                 case rte_pmi_uint8:
                     prep_buffer (base_ptr, &tmp);
-                    nb = sscanf (base_ptr, "%d", (uint8_t*)(data_ptr));
+                    nb = sscanf (base_ptr, "%u", (uint8_t*)(data_ptr));
                     base_ptr = tmp;
                     break;
                 case rte_pmi_int16:
@@ -73,7 +72,7 @@ int rte_pmi_unpack (rte_iovec_t     *data,
                     break;
                 case rte_pmi_uint16:
                     prep_buffer (base_ptr, &tmp);
-                    nb = sscanf (base_ptr, "%d", (uint16_t*)(data_ptr));
+                    nb = sscanf (base_ptr, "%u", (uint16_t*)(data_ptr));
                     base_ptr = tmp;
                     break;
                 case rte_pmi_int32:
@@ -83,7 +82,7 @@ int rte_pmi_unpack (rte_iovec_t     *data,
                     break;
                 case rte_pmi_uint32:
                     prep_buffer (base_ptr, &tmp);
-                    nb = sscanf (base_ptr, "%d", (uint32_t*)(data_ptr));
+                    nb = sscanf (base_ptr, "%u", (uint32_t*)(data_ptr));
                     base_ptr = tmp;
                     break;
                 case rte_pmi_int64:
@@ -93,7 +92,7 @@ int rte_pmi_unpack (rte_iovec_t     *data,
                     break;
                 case rte_pmi_uint64:
                     prep_buffer (base_ptr, &tmp);
-                    nb = sscanf (base_ptr, "%ld", (uint64_t*)(data_ptr));
+                    nb = sscanf (base_ptr, "%lu", (uint64_t*)(data_ptr));
                     base_ptr = tmp;
                     break;
                 case rte_pmi_float2:

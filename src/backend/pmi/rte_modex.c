@@ -283,32 +283,32 @@ RTE_PUBLIC int rte_pmi_srs_set_data (rte_srs_session_t session,
                     value_buffer += nb;
                     break;
                 case rte_pmi_uint8:
-                    nb = sprintf (value_buffer, "%d,", (uint8_t*)(iov[i].iov_base) + j * get_datatype_size(iov[i].type));
+                    nb = sprintf (value_buffer, "%u,", *(uint8_t*)((iov[i].iov_base) + j * get_datatype_size(iov[i].type)));
                     value_buffer += nb;
                     break;
                 case rte_pmi_int16:
-                    nb = sprintf (value_buffer, "%d", (int16_t*)(iov[i].iov_base) + j * get_datatype_size(iov[i].type));
-                    value_buffer += nb * get_datatype_size(iov[i].type);
+                    nb = sprintf (value_buffer, "%d,", *(int16_t*)((iov[i].iov_base) + j * get_datatype_size(iov[i].type)));
+                    value_buffer += nb;
                     break;
                 case rte_pmi_uint16:
-                    nb = sprintf (value_buffer, "%d", (uint16_t*)(iov[i].iov_base) + j * get_datatype_size(iov[i].type));
-                    value_buffer += nb * get_datatype_size(iov[i].type);
+                    nb = sprintf (value_buffer, "%u,", *(uint16_t*)((iov[i].iov_base) + j * get_datatype_size(iov[i].type)));
+                    value_buffer += nb;
                     break;
                 case rte_pmi_int32:
-                    nb = sprintf (value_buffer, "%d", (int32_t*)(iov[i].iov_base) + j * get_datatype_size(iov[i].type));
-                    value_buffer += nb * get_datatype_size(iov[i].type);
+                    nb = sprintf (value_buffer, "%d,", *(int32_t*)((iov[i].iov_base) + j * get_datatype_size(iov[i].type)));
+                    value_buffer += nb;
                     break;
                 case rte_pmi_uint32:
-                    nb = sprintf (value_buffer, "%d", (int32_t*)(iov[i].iov_base) + j * get_datatype_size(iov[i].type));
-                    value_buffer += nb * get_datatype_size(iov[i].type);
+                    nb = sprintf (value_buffer, "%u,", *(uint32_t*)((iov[i].iov_base) + j * get_datatype_size(iov[i].type)));
+                    value_buffer += nb;
                     break;
                 case rte_pmi_int64:
-                    nb = sprintf (value_buffer, "%ld", (int64_t*)(iov[i].iov_base) + j * get_datatype_size(iov[i].type));
-                    value_buffer += nb * get_datatype_size(iov[i].type);
+                    nb = sprintf (value_buffer, "%ld,", *(int64_t*)((iov[i].iov_base) + j * get_datatype_size(iov[i].type)));
+                    value_buffer += nb;
                     break;
                 case rte_pmi_uint64:
-                    nb = sprintf (value_buffer, "%ld", (uint64_t*)(iov[i].iov_base) + j * get_datatype_size(iov[i].type));
-                    value_buffer += nb * get_datatype_size(iov[i].type);
+                    nb = sprintf (value_buffer, "%lu,", *(uint64_t*)((iov[i].iov_base) + j * get_datatype_size(iov[i].type)));
+                    value_buffer += nb;
                     break;
                 case rte_pmi_float2:
                     break;
