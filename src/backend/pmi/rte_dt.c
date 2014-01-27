@@ -70,37 +70,37 @@ int rte_pmi_unpack (rte_iovec_t     *data,
                     prep_buffer (base_ptr, &tmp);
                     nb = sscanf (base_ptr, "%d", (int16_t*)(data_ptr));
                     base_ptr = tmp;
-                    data_ptr++;
+                    data_ptr+=2;
                     break;
                 case rte_pmi_uint16:
                     prep_buffer (base_ptr, &tmp);
                     nb = sscanf (base_ptr, "%u", (uint16_t*)(data_ptr));
                     base_ptr = tmp;
-                    data_ptr++;
+                    data_ptr+=2;
                     break;
                 case rte_pmi_int32:
                     prep_buffer (base_ptr, &tmp);
                     nb = sscanf (base_ptr, "%d", (int32_t*)(data_ptr));
                     base_ptr = tmp;
-                    data_ptr++;
+                    data_ptr+=4;
                     break;
                 case rte_pmi_uint32:
                     prep_buffer (base_ptr, &tmp);
                     nb = sscanf (base_ptr, "%u", (uint32_t*)(data_ptr));
                     base_ptr = tmp;
-                    data_ptr++;
+                    data_ptr+=4;
                     break;
                 case rte_pmi_int64:
                     prep_buffer (base_ptr, &tmp);
                     nb = sscanf (base_ptr, "%ld", (int64_t*)(data_ptr));
                     base_ptr = tmp;
-                    data_ptr++;
+                    data_ptr+=8;
                     break;
                 case rte_pmi_uint64:
                     prep_buffer (base_ptr, &tmp);
                     nb = sscanf (base_ptr, "%lu", (uint64_t*)(data_ptr));
                     base_ptr = tmp;
-                    data_ptr++;
+                    data_ptr+=8;
                     break;
                 case rte_pmi_float2:
                     break;
