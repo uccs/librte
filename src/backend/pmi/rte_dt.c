@@ -56,49 +56,49 @@ int rte_pmi_unpack (rte_iovec_t     *data,
                 case rte_pmi_bool:
                 case rte_pmi_int8:
                     prep_buffer (base_ptr, &tmp);
-                    nb = sscanf (base_ptr, "%d", ((int8_t*)(data_ptr)));
+                    nb = sscanf (base_ptr, "%d", ((int8_t)(data_ptr)));
                     base_ptr = tmp;
                     data_ptr+=sizeof(int8_t*);
                     break;
                 case rte_pmi_uint8:
                     prep_buffer (base_ptr, &tmp);
-                    nb = sscanf (base_ptr, "%u", (uint8_t*)(data_ptr));
+                    nb = sscanf (base_ptr, "%u", (uint8_t)(data_ptr));
                     base_ptr = tmp;
                     data_ptr+=sizeof(uint8_t*);
                     break;
                 case rte_pmi_int16:
                     prep_buffer (base_ptr, &tmp);
-                    nb = sscanf (base_ptr, "%d", (int16_t*)(data_ptr));
+                    nb = sscanf (base_ptr, "%d", (int16_t)(data_ptr));
                     base_ptr = tmp;
                     data_ptr+=sizeof(int16_t*);
                     break;
                 case rte_pmi_uint16:
                     prep_buffer (base_ptr, &tmp);
-                    nb = sscanf (base_ptr, "%u", (uint16_t*)(data_ptr));
+                    nb = sscanf (base_ptr, "%u", (uint16_t)(data_ptr));
                     base_ptr = tmp;
                     data_ptr+=sizeof(uint16_t*);
                     break;
                 case rte_pmi_int32:
                     prep_buffer (base_ptr, &tmp);
-                    nb = sscanf (base_ptr, "%d", (int32_t*)(data_ptr));
+                    nb = sscanf (base_ptr, "%d", (int32_t)(data_ptr));
                     base_ptr = tmp;
                     data_ptr+=sizeof(int32_t*);
                     break;
                 case rte_pmi_uint32:
                     prep_buffer (base_ptr, &tmp);
-                    nb = sscanf (base_ptr, "%u", (uint32_t*)(data_ptr));
+                    nb = sscanf (base_ptr, "%u", (uint32_t)(data_ptr));
                     base_ptr = tmp;
                     data_ptr+=sizeof(uint32_t*);
                     break;
                 case rte_pmi_int64:
                     prep_buffer (base_ptr, &tmp);
-                    nb = sscanf (base_ptr, "%ld", (int64_t*)(data_ptr));
+                    nb = sscanf (base_ptr, "%ld", (int64_t)(data_ptr));
                     base_ptr = tmp;
                     data_ptr+=sizeof(int64_t*);
                     break;
                 case rte_pmi_uint64:
                     prep_buffer (base_ptr, &tmp);
-                    nb = sscanf (base_ptr, "%lu", (uint64_t*)(data_ptr));
+                    nb = sscanf (base_ptr, "%lu", (uint64_t)(data_ptr));
                     base_ptr = tmp;
                     data_ptr+=sizeof(uint64_t*);
                     break;
