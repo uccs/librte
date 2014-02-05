@@ -50,7 +50,7 @@ RTE_PUBLIC int rte_orte_get_ec_locality (rte_ec_handle_t ec_handle)
     if (RTE_PROC_LOCALITY_UNKNOWN == proc->locality) {
 #if  OPAL_HAVE_HWLOC
         /* retrieve the binding for the other proc */
-        rc = opal_db.fetch((opal_identifier_t*)&(proc->name), ORTE_DB_CPUSET,
+        rc = opal_db.fetch((opal_identifier_t*)&(proc->name), OPAL_DB_CPUSET,
                            (void**)&cpu_bitmap, OPAL_STRING);
         if (ORTE_SUCCESS != rc) {
             free(cpu_bitmap);

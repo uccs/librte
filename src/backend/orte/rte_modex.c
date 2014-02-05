@@ -171,7 +171,7 @@ RTE_PUBLIC int rte_orte_srs_set_data (rte_srs_session_t session,
     bo.size = datalen;
 
     /* Post the data */
-    rc = opal_db.store((opal_identifier_t*)rte_get_my_ec(), OPAL_DB_GLOBAL, key, (void *)&bo, OPAL_BYTE_OBJECT);
+    rc = opal_db.store((opal_identifier_t*)rte_get_my_ec(), OPAL_SCOPE_GLOBAL, key, (void *)&bo, OPAL_BYTE_OBJECT);
     if (OPAL_SUCCESS != rc) {
         rc = RTE_ERROR;
         goto out;

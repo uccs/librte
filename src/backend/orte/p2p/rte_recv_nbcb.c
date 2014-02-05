@@ -26,28 +26,14 @@ int rte_orte_recv_nbcb  (rte_ec_handle_t src,
                                rte_request_cb_t cb_fn,
                                void * cb_data)
 {
-    int rc;
-
-    rc = orte_rml.recv_buffer_nb(src, tag, flags, 
-            /* Cast the function pointer to ORTE format */
-            (void (*)(int status, struct orte_process_name_t* peer, 
-                      struct opal_buffer_t* buffer, 
-                      orte_rml_tag_t tag, void* cbdata)) cb_fn, cb_data);
-    if (OPAL_SUCCESS != rc) {
-        return RTE_ERROR;
-    }
-
-    return RTE_SUCCESS;
+    return RTE_ERROR_NOT_IMPLEMENTED;
 }
 
 int rte_orte_cancel(rte_ec_handle_t  peer, int tag)
 {
     int rc;
-    
-    rc = orte_rml.recv_cancel(peer, tag);
-    if (OPAL_SUCCESS != rc) {
-        return RTE_ERROR;
-    }
+
+    orte_rml.recv_cancel(peer, tag);
 
     return RTE_SUCCESS;
 }
