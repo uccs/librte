@@ -35,6 +35,11 @@ RTE_PUBLIC int rte_orte_srs_session_create (rte_group_t group,
                                        int tag,
                                        rte_srs_session_t *session)
 {
+    /* ORTE doesn't support multile sessions.
+     * As a result, we piggy back on existing session.
+     * This is hacky solutiong for now.
+     */
+#if 0
     if (modex_used)
         return RTE_ERROR;
     else {
@@ -42,6 +47,11 @@ RTE_PUBLIC int rte_orte_srs_session_create (rte_group_t group,
         *session = (rte_srs_session_t *)&modex_used;
         return RTE_SUCCESS;
     }
+#else 
+    modex_used = true;
+    *session = (rte_srs_session_t *)&modex_used;
+    return RTE_SUCCESS;
+#endif 
 }
 
 /**
