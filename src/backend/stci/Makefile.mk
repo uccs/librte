@@ -23,10 +23,12 @@ librte_stci_la_SOURCES = \
           src/backend/stci/rte_ec_to_str.c \
           src/backend/stci/rte_abort.c \
           src/backend/stci/rte_fini.c \
+          src/backend/stci/rte_get_job_id.c \
           src/backend/stci/rte_get_datatype_size.c \
           src/backend/stci/rte_get_ec_hostname.c \
           src/backend/stci/rte_get_ec_index.c \
           src/backend/stci/rte_get_ec_locality.c \
+          src/backend/stci/rte_get_ec_node_id.c \
           src/backend/stci/rte_get_ec_node_name.c \
           src/backend/stci/rte_get_my_ec.c \
           src/backend/stci/rte_get_session_dir.c \
