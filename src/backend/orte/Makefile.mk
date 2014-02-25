@@ -15,10 +15,12 @@ librte_orte_la_SOURCES = \
           src/backend/orte/rte_init.c \
           src/backend/orte/rte_group_rank.c \
           src/backend/orte/rte_group_size.c \
+          src/backend/orte/rte_get_job_id.c \
           src/backend/orte/rte_get_my_ec.c \
           src/backend/orte/rte_get_ec_locality.c \
           src/backend/orte/rte_cmp_ec.c \
           src/backend/orte/rte_get_ec_index.c \
+          src/backend/orte/rte_get_ec_node_id.c \
           src/backend/orte/rte_get_ec_node_name.c \
           src/backend/orte/rte_get_ec_hostname.c \
           src/backend/orte/rte_get_session_dir.c \
