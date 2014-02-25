@@ -20,7 +20,9 @@ librte_pmi_la_SOURCES = \
           src/backend/pmi/rte_get_ec_hostname.c \
           src/backend/pmi/rte_get_ec_index.c \
           src/backend/pmi/rte_get_ec_locality.c \
+          src/backend/pmi/rte_get_ec_node_id.c \
           src/backend/pmi/rte_get_ec_node_name.c \
+          src/backend/pmi/rte_get_job_id.c \
           src/backend/pmi/rte_get_my_ec.c \
           src/backend/pmi/rte_get_session_dir.c \
           src/backend/pmi/rte_group_index_to_ec.c \
