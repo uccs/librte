@@ -228,6 +228,7 @@ RTE_PUBLIC int rte_finalize(void);
  */
 RTE_PUBLIC void rte_abort(int error_code, char *exit_description, ...);
 
+RTE_PUBLIC uint32_t rte_get_job_id (void);
 
 /**
  * @brief Return handle to the calling processes/threads execution context
@@ -324,6 +325,16 @@ RTE_PUBLIC rte_node_index_t rte_get_ec_index(rte_group_t group,
  *       is valid for the lifetime of the specified execution-context.
  */
 RTE_PUBLIC char * rte_get_ec_node_name(rte_ec_handle_t ec_handle);
+
+
+/**
+ * @brief Get the unique node identifier for an EC.
+ *
+ * @param[in] ec_handle  The EC handle.
+ *
+ * @return uint32_t the node identifier.
+ */
+RTE_PUBLIC uint32_t rte_get_ec_node_id(rte_ec_handle_t ec_handle);
 
 /**
  * @brief Get the hostname for an EC.
