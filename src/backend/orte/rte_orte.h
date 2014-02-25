@@ -21,6 +21,8 @@ int rte_orte_finalize(void);
 
 void rte_orte_abort(int error_code, char *exit_description, ...);
 
+uint32_t rte_orte_get_job_id (void);
+
 rte_ec_handle_t rte_orte_get_my_ec(void);
 
 rte_ec_handle_t rte_orte_group_index_to_ec(rte_group_t group,
@@ -39,6 +41,8 @@ rte_node_index_t rte_orte_get_ec_index(rte_group_t group,
                                        rte_ec_handle_t ec_handle);
 
 char * rte_orte_get_ec_node_name(rte_ec_handle_t ec_handle);
+
+uint32_t rte_orte_get_ec_node_id (rte_ec_handle_t ec_handle);
 
 char * rte_orte_get_ec_hostname(rte_ec_handle_t ec_handle);
 
