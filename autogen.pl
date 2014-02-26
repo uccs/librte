@@ -19,4 +19,7 @@ if (!-d "autoconf/m4") {
 # Run autoreconf
 print "==> Running autoreconf\n";
 my $cmd = "autoreconf -ivf --warnings=all,no-obsolete,no-override -I autoconf";
-system($cmd);
+my $ret = system($cmd);
+if ($ret != 0) {
+    exit($ret)
+}
