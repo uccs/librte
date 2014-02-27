@@ -14,24 +14,32 @@
 #include "rte.h"
 #include "orte/mca/grpcomm/grpcomm.h"
 
+static int coll_id = 1;
+
 int rte_orte_barrier (rte_group_t group)
 {
     int rc;
-    orte_grpcomm_collective_t *coll;
+    orte_grpcomm_collective_t coll;
 
-    coll = OBJ_NEW(orte_grpcomm_collective_t);
-    coll->id = orte_grpcomm_base_get_coll_id ();// orte_process_info.peer_init_barrier;
+    OBJ_CONSTRUCT(&coll, orte_grpcomm_collective_t);
+//    coll.id = ++coll_id;
+    if (0 == coll_id) {
+        coll.id = orte_process_info.peer_modex;
+    } else if (1 == coll_id) {
+        coll.id = orte_process_info.peer_init_barrier;
+    } else {
+        coll.id = orte_process_info.peer_fini_barrier;
+    }
+    coll.active = true;
+    coll_id++;
 
-    if (OPAL_SUCCESS != (rc = orte_grpcomm.barrier(coll))) {
+    if (OPAL_SUCCESS != (rc = orte_grpcomm.barrier(&coll))) {
         return RTE_ERROR;
     }
 
-    coll->active = true;
-    while (coll->active) {
+    while (coll.active) {
         opal_progress();
     }
-
-    OBJ_RELEASE(coll);
 
     return RTE_SUCCESS;
 }
