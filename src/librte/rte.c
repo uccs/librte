@@ -183,6 +183,7 @@ int rte_init(int *argc, char ***argv, rte_group_t *out_group)
         rte_fn_table.rte_be_get_ec_locality     = rte_orte_get_ec_locality;
         rte_fn_table.rte_be_cmp_ec              = rte_orte_cmp_ec;
         rte_fn_table.rte_be_get_ec_index        = rte_orte_get_ec_index;
+        rte_fn_table.rte_be_get_ec_node_id      = rte_orte_get_ec_node_id;
         rte_fn_table.rte_be_get_ec_node_name    = rte_orte_get_ec_node_name;
         rte_fn_table.rte_be_get_ec_hostname     = rte_orte_get_ec_hostname;
         rte_fn_table.rte_be_get_session_dir     = rte_orte_get_session_dir;
@@ -218,6 +219,7 @@ int rte_init(int *argc, char ***argv, rte_group_t *out_group)
         rte_fn_table.rte_be_get_ec_locality     = rte_stci_get_ec_locality;
         rte_fn_table.rte_be_cmp_ec              = rte_stci_cmp_ec;
         rte_fn_table.rte_be_get_ec_index        = rte_stci_get_ec_index;
+        rte_fn_table.rte_be_get_ec_node_id      = rte_stci_get_ec_node_id;
         rte_fn_table.rte_be_get_ec_node_name    = rte_stci_get_ec_node_name;
         rte_fn_table.rte_be_get_ec_hostname     = rte_stci_get_ec_hostname;
         rte_fn_table.rte_be_get_session_dir     = rte_stci_get_session_dir;
@@ -262,6 +264,7 @@ int rte_init(int *argc, char ***argv, rte_group_t *out_group)
         rte_fn_table.rte_be_cmp_ec              = rte_pmi_cmp_ec;
         rte_fn_table.rte_be_get_ec_index        = rte_pmi_get_ec_index;
         rte_fn_table.rte_be_get_ec_node_name    = rte_pmi_get_ec_node_name;
+        rte_fn_table.rte_be_get_ec_node_id      = rte_pmi_get_ec_node_id;
         rte_fn_table.rte_be_get_ec_hostname     = rte_pmi_get_ec_hostname;
         rte_fn_table.rte_be_get_session_dir     = rte_pmi_get_session_dir;
         rte_fn_table.rte_be_cancel              = rte_pmi_cancel;
@@ -303,7 +306,7 @@ void rte_abort(int error_code, char *exit_description, ...)
                                               exit_description, arglist);
 }
 
-uint32_t rte_get__job_id (void)
+uint32_t rte_get_job_id (void)
 {
     return rte_fn_table.rte_be_get_job_id ();
 }
@@ -352,10 +355,10 @@ rte_node_index_t rte_get_ec_index(rte_group_t group,
 char * rte_get_ec_node_name(rte_ec_handle_t ec_handle)
 {
     return rte_fn_table.rte_be_get_ec_node_name(ec_handle);
-
 }
 
-uint32_t rte_get_ec_nde_id (rte_ec_handle_t ec_handle)
+
+uint32_t rte_get_ec_node_id (rte_ec_handle_t ec_handle)
 {
     return rte_fn_table.rte_be_get_ec_node_id (ec_handle);
 }
