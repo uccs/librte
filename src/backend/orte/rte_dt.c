@@ -30,17 +30,18 @@ int rte_orte_unpack (rte_iovec_t     *data  ,
     uint32_t c_i;
     opal_buffer_t * buffer = (opal_buffer_t *) src;
     size_t buffer_offset = 0;
-    
-    for(c_i = 0; c_i < data->count; ++c_i) {
-        rc = opal_dss.unpack(buffer, (void *)((char *)data->iov_base + buffer_offset), 
-                /* Pasha: I dont like the int32_t casting */
-                (int32_t *)offset, data->type->opal_dt);
-        if (OPAL_SUCCESS != rc) {
-            rc = RTE_ERROR;
-            goto out;
-        }
-        buffer_offset += get_datatype_size(data->type);
+    int32_t num_elems = data->count; 
+    rc = opal_dss.unpack(buffer, (void *)((char *)data->iov_base), 
+            /* Pasha: I dont like the int32_t casting */
+            &num_elems, data->type->opal_dt);
+    if (OPAL_SUCCESS != rc) {
+        printf ("error: opal_dss.unpack failed rc = %d\n", rc);
+        fflush(NULL);
+        rc = RTE_ERROR;
+        goto out;
     }
+    *offset = buffer->unpack_ptr - buffer->base_ptr;
+
     rc = RTE_SUCCESS;
 out:
     return rc;
