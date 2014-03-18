@@ -255,7 +255,7 @@ int rte_init(int *argc, char ***argv, rte_group_t *out_group)
         rte_fn_table.rte_be_init                = rte_pmi_init;
         rte_fn_table.rte_be_finalize            = rte_pmi_finalize;
         rte_fn_table.rte_be_abort               = rte_pmi_abort;
-        rte_fn_table.rte_be_get_job_id          = rte_pmi_job_id;
+        rte_fn_table.rte_be_get_job_id          = rte_pmi_get_job_id;
         rte_fn_table.rte_be_get_my_ec           = rte_pmi_get_my_ec;
         rte_fn_table.rte_be_group_index_to_ec   = rte_pmi_group_index_to_ec;
         rte_fn_table.rte_be_group_size          = rte_pmi_group_size;
