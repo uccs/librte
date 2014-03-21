@@ -15,6 +15,8 @@
 
 #include <pmi.h>
 
+static int my_pmi_dummy_group = 0;
+
 RTE_PUBLIC int rte_pmi_init(int *argc, char ***argv, rte_group_t *out_group)
 {
    int rc = RTE_SUCCESS, spawned, size, rank, appnum;
@@ -37,6 +39,8 @@ RTE_PUBLIC int rte_pmi_init(int *argc, char ***argv, rte_group_t *out_group)
    /* set up the RTE proc table */
    rc = rte_pmi_proclist_init ();
    
+   *out_group = &my_pmi_dummy_group;
+
    return rc;
 }
 
