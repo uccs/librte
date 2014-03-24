@@ -109,7 +109,7 @@ RTE_PUBLIC int rte_pmi_srs_get_data(rte_srs_session_t session,
                                     void **value,
                                     int *size)
 {
-    int max_key_length, actual_key_length, maxvalue, rc, rank, vallen, max_value_length;
+    int max_key_length, actual_key_length, maxvalue, rc, rank, vallen;
     size_t keysize;
     rte_pmi_srs_session_ptr_t _session;
     rte_pmi_proc_t *_ec_handle;
@@ -156,28 +156,26 @@ RTE_PUBLIC int rte_pmi_srs_get_data(rte_srs_session_t session,
 	memset(_key, 0, max_key_length);
     actual_key_length = sprintf (_key, "%s_%d", key, rank);
 	actual_key_length = strlen(_key);
-    fprintf (stderr, "Fetching key %s\n", _key);
+
+//    fprintf (stderr, "Fetching key %s\n", _key);
     
     value_buffer = malloc (maxvalue);
     if (NULL == value_buffer)
         return RTE_ERROR_OUT_OF_RESOURCE;
 
 #if RTE_WANT_PMI2 == 0    
-    rc = PMI_KVS_Get (_session->name, _key, value_buffer, max_value_length);
+    rc = PMI_KVS_Get (_session->name, _key, value_buffer, maxvalue);
     if (PMI_SUCCESS != rc) {
         fprintf (stderr, "PMI_KVS_Get failed (rc = %d)", rc);
         fflush (stderr);
         return RTE_ERROR;
     }
-#if HAVE_SLURM_PMI
-    /* if we are running on top of slurm we need a barrier to actually publish the data */
-    PMI_Barrier ();
-#endif
+    *size = strlen(value_buffer);
 #else
     rc = PMI2_KVS_Get(rte_pmi2_info.jobid, PMI2_ID_NULL, _key, value_buffer, PMI2_MAX_VALLEN, &vallen);
+    *size = vallen;
 #endif
 
-    *size = vallen;
     *value = value_buffer;
  
     return RTE_SUCCESS;
@@ -316,7 +314,7 @@ RTE_PUBLIC int rte_pmi_srs_set_data (rte_srs_session_t session,
         }
     }
 
-    printf ("session name: %s, key: %s, value_buffer: %s\n", _session->name, _key, value_buffer);
+//    printf ("session name: %s, key: %s, value_buffer: %s\n", _session->name, _key, value_buffer_ptr);
 #if RTE_WANT_PMI2 == 0
     rc = PMI_KVS_Put (_session->name, _key, value_buffer_ptr);
     if (PMI_SUCCESS != rc) {
@@ -343,6 +341,13 @@ RTE_PUBLIC int rte_pmi_srs_exchange_data(rte_srs_session_t session)
     rte_pmi_srs_session_ptr_t _session = (rte_pmi_srs_session_ptr_t)session;
     
     rc = PMI_KVS_Commit (_session->name);
+    if (PMI_SUCCESS != rc) {
+        fprintf (stderr, "rc = %d", rc);
+        fflush (stderr);
+        return RTE_ERROR;
+    }
+
+    rc = PMI_Barrier ();
 #else
     rc = PMI2_KVS_Fence ();
 #endif
