@@ -138,7 +138,6 @@ RTE_PUBLIC int rte_orte_srs_set_data (rte_srs_session_t session,
     int rc;
     int32_t vec_i;
     uint32_t c_i;
-    size_t offset = 0;
     void *dataptr;
     opal_byte_object_t bo;
     orte_std_cntr_t datalen;
@@ -156,16 +155,12 @@ RTE_PUBLIC int rte_orte_srs_set_data (rte_srs_session_t session,
     buffer = OBJ_NEW(opal_buffer_t);
     /* Pack data */
     for (vec_i = 0; vec_i < iovcnt; ++vec_i) {
-        offset = 0;
-        for(c_i = 0; c_i < iov[vec_i].count; ++c_i) {
-            rc = opal_dss.pack(buffer,
-                    (void *)((char *)iov[vec_i].iov_base + offset),
-                    1, (opal_data_type_t)iov[vec_i].type->opal_dt);
-            if (OPAL_SUCCESS != rc) {
-                rc = RTE_ERROR;
-                goto out;
-            }
-            offset += get_datatype_size(iov[vec_i].type);
+        rc = opal_dss.pack(buffer,
+                (void *)((char *)iov[vec_i].iov_base),
+                iov[vec_i].count, (opal_data_type_t)iov[vec_i].type->opal_dt);
+        if (OPAL_SUCCESS != rc) {
+            rc = RTE_ERROR;
+            goto out;
         }
     }
 

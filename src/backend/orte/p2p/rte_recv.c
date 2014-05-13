@@ -25,8 +25,7 @@ int rte_orte_recv (rte_iovec_t      *iov  ,
     int rc;
     uint32_t vec_i;
     uint32_t c_i;
-    size_t offset;
-    int num_vals = 1;
+    uint32_t offset = 0;
     opal_buffer_t *buffer = OBJ_NEW(opal_buffer_t);;
     
     opal_progress_event_users_increment();
@@ -38,15 +37,9 @@ int rte_orte_recv (rte_iovec_t      *iov  ,
     }
 
     for (vec_i = 0; vec_i < cnt; ++vec_i) {
-        offset = 0;
-        for(c_i = 0; c_i < iov[vec_i].count; ++c_i) {
-            rc = opal_dss.unpack(buffer, (void *)((char *)iov[vec_i].iov_base + offset), 
-                    &num_vals, (opal_data_type_t)iov[vec_i].type->opal_dt);
-            if (OPAL_SUCCESS != rc) {
-                rc = RTE_ERROR;
-                goto out;
-            }
-            offset += get_datatype_size(iov[vec_i].type);
+        rc = rte_unpack (&iov[vec_i], buffer, &offset);
+        if (RTE_SUCCESS != rc) {
+            return rc;
         }
     }
     rc = RTE_SUCCESS;
