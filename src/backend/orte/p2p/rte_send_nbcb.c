@@ -28,19 +28,14 @@ int rte_orte_send_nbcb(rte_iovec_t *iov,
     int rc;
     uint32_t vec_i;
     uint32_t c_i;
-    size_t offset;
     opal_buffer_t* buffer = OBJ_NEW(opal_buffer_t);
 
     for (vec_i = 0; vec_i < cnt; ++vec_i) {
-        offset = 0;
-        for(c_i = 0; c_i < iov[vec_i].count; ++c_i) {
-            rc = opal_dss.pack(buffer, 
-                              (void *)((char *)iov[vec_i].iov_base + offset), 
-                              1, (opal_data_type_t)iov[vec_i].type->opal_dt);
-            if (OPAL_SUCCESS != rc) {
-                return rc;
-            }
-            offset += get_datatype_size(iov[vec_i].type);
+        rc = opal_dss.pack(buffer, 
+                          (void *)((char *)iov[vec_i].iov_base), 
+                          iov[vec_i].count, (opal_data_type_t)iov[vec_i].type->opal_dt);
+        if (OPAL_SUCCESS != rc) {
+            return rc;
         }
     }
 
