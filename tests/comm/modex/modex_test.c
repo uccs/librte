@@ -26,13 +26,14 @@ int main (int argc, char **argv) {
     int retval                     = EXIT_SUCCESS;
     rte_srs_session_t    session1  = NULL;
     char buf1[]                    = "PMI is";
-    char buf2[5];
+    char buf2[10];
     char buf3[] = "not\0";
     char buf4[] = "cool";
     rte_iovec_t iov[3];
     rte_iovec_t my_iov[3];
     rte_group_t             group_world;
     rte_ec_handle_t         target_ec;
+    int my_rank;
     void *databuff                  = NULL;
     int i, buff_size;
     uint32_t offset;
@@ -41,6 +42,8 @@ int main (int argc, char **argv) {
     rc = rte_init (&argc, &argv, &group_world);
 
     value = getenv("RTE_DEBUG");
+
+    my_rank = rte_group_rank (group_world);
 
     if (NULL != value && 0 == strcmp(value, "1")) {
         char hostname[256];
@@ -64,7 +67,7 @@ int main (int argc, char **argv) {
 
     iov[0].iov_base = &buf1;
     iov[0].type     = rte_datatype_int8_t;
-    iov[0].count    = strlen (buf1);
+    iov[0].count    = strlen (buf1) + 1;
 
     iov[1].iov_base = &buf3;
     iov[1].type     = rte_datatype_int8_t;
@@ -72,7 +75,7 @@ int main (int argc, char **argv) {
 
     iov[2].iov_base = &buf4;
     iov[2].type     = rte_datatype_int8_t;
-    iov[2].count    = strlen (buf4);
+    iov[2].count    = strlen (buf4) + 1;
 
 
     rc = rte_srs_set_data (session1, "toto", iov, 3);
@@ -82,6 +85,8 @@ int main (int argc, char **argv) {
         goto cleanup;
     }
 
+    printf ("(rank: %d)\texchanging data\n", my_rank);
+
     rc = rte_srs_exchange_data (session1);
     if (rc != RTE_SUCCESS) {
         fprintf (stderr, "Error: Impossible to prepare data publishing\n");
@@ -90,6 +95,8 @@ int main (int argc, char **argv) {
     }
 
     for (i = 0; i < rte_group_size(group_world); i++) {
+        if (my_rank == i)
+            continue;
 
         target_ec = rte_group_index_to_ec (group_world, i);
 
@@ -101,10 +108,10 @@ int main (int argc, char **argv) {
             goto cleanup;
         }
 
-        printf ("(toto) Buffer size = %d\n", buff_size);
+        printf ("(rank: %d)\treceived srs data from rank %d\n\t\tbuffer size = %d\n", my_rank, i, buff_size);
 
         my_iov[0].iov_base  = &buf2;
-        my_iov[0].count     = strlen(buf1);
+        my_iov[0].count     = strlen(buf1) + 1;
         my_iov[0].type      = rte_datatype_int8_t;
 
         my_iov[1].iov_base  = &buf2;
@@ -112,7 +119,7 @@ int main (int argc, char **argv) {
         my_iov[1].type      = rte_datatype_int8_t;
 
         my_iov[2].iov_base  = &buf2;
-        my_iov[2].count     = strlen(buf4);
+        my_iov[2].count     = strlen(buf4) + 1;
         my_iov[2].type      = rte_datatype_int8_t;
 
         offset = 0;
@@ -120,20 +127,20 @@ int main (int argc, char **argv) {
         if (0 < buff_size) {
             rte_unpack (&my_iov[0], databuff, &offset);
             if (NULL != my_iov[0].iov_base){
-                printf ("iov_base[0]: %s\n", (char*)my_iov[0].iov_base);
+                printf ("(rank: %d)\tiov_base[0]: %s\n", my_rank, (char*)my_iov[0].iov_base);
             }
             else
                 printf ("Warning: my_iov.iov_base is NULL!\n");
 
             rte_unpack (&my_iov[1], databuff, &offset);
             if (NULL != my_iov[1].iov_base){
-                printf ("iov_base[1]: %s\n", (char*)my_iov[1].iov_base);
+                printf ("(rank: %d)\tiov_base[1]: %s\n", my_rank, (char*)my_iov[1].iov_base);
             }
             else
                 printf ("Warning: my_iov[1].iov_base is NULL!\n");
             rte_unpack (&my_iov[2], databuff, &offset);
             if (NULL != my_iov[2].iov_base){
-                printf ("iov_base[2]: %s\n", (char*)my_iov[2].iov_base);
+                printf ("(rank: %d)\tiov_base[2]: %s\n", my_rank, (char*)my_iov[2].iov_base);
             }
             else
                 printf ("Warning: my_iov.iov_base is NULL!\n");
@@ -145,8 +152,6 @@ int main (int argc, char **argv) {
             goto cleanup;
         }
     }
-
-    fprintf (stdout, "Data received\n");
 
 cleanup:
     fflush (stderr);
