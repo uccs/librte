@@ -35,7 +35,7 @@ const int RTE_PROC_ALL_LOCAL =        OPAL_PROC_ALL_LOCAL;
 RTE_PUBLIC int rte_orte_get_ec_locality (rte_ec_handle_t ec_handle)
 {
     int rc;
-    orte_vpid_t daemon;
+    orte_vpid_t daemon, *vptr;
     char *cpu_bitmap;
 
     orte_process_name_t * name = (orte_process_name_t *)ec_handle;
@@ -51,19 +51,28 @@ RTE_PUBLIC int rte_orte_get_ec_locality (rte_ec_handle_t ec_handle)
 #if  OPAL_HAVE_HWLOC
         /* retrieve the binding for the other proc */
         rc = opal_db.fetch((opal_identifier_t*)&(proc->name), ORTE_DB_CPUSET,
-                           (void**)&cpu_bitmap, OPAL_STRING);
+                           (void*)&cpu_bitmap, OPAL_STRING);
         if (ORTE_SUCCESS != rc) {
             free(cpu_bitmap);
-            return RTE_ERROR;
+            fprintf (stderr, "Error: unable to query opal_db\n");
+            return OPAL_PROC_LOCALITY_UNKNOWN;
         }
 
+        vptr = &daemon;
+        rc = opal_db.fetch((opal_identifier_t*)&(proc->name), ORTE_DB_DAEMON_VPID,
+                           (void**)&vptr, OPAL_UINT32);
+        if (ORTE_SUCCESS != rc) {
+            free(cpu_bitmap);
+            fprintf (stderr, "Error: unable to query opal_db\n");
+            return OPAL_PROC_LOCALITY_UNKNOWN;
+        }
         if (OPAL_EQUAL == orte_util_compare_name_fields(ORTE_NS_CMP_ALL,
             &proc->name, ORTE_PROC_MY_NAME)) {
             /* if this data is from myself, then set
              * locality to all */
             proc->locality = OPAL_PROC_ALL_LOCAL;
         } else if (daemon != ORTE_PROC_MY_DAEMON->vpid) {
-            proc->locality = OPAL_PROC_ALL_LOCAL;
+            proc->locality = OPAL_PROC_NON_LOCAL;
         } else if (NULL == cpu_bitmap || NULL == orte_process_info.cpuset) {
             proc->locality = OPAL_PROC_ON_NODE;
         } else {
