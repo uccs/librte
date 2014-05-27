@@ -18,7 +18,7 @@ int main (int argc, char** argv)
 
     rte_ec_handle_t ec;
     rte_group_t     group;
-    int             group_size, index, loc;
+    int             group_size, index, loc, my_rank;
 
     char *locality_str;
     char  *loc_str = "local";
@@ -27,6 +27,7 @@ int main (int argc, char** argv)
     rte_init (&argc, &argv, &group);
 
     group_size = rte_group_size (group);
+    my_rank = rte_group_rank(group);
 
     if (0 > group_size)
         goto error;
@@ -40,13 +41,14 @@ int main (int argc, char** argv)
 
         loc = rte_get_ec_locality (ec);
 
-        if (RTE_PROC_ON_NODE == loc) {
+        if (   RTE_PROC_ON_NODE == loc
+            || RTE_PROC_ALL_LOCAL == loc) {
             locality_str = loc_str;
         } else {
             locality_str = nloc_str;
         }
 
-        printf ("rank %d is %s", index, locality_str);
+        printf ("[%d]:rank %d is %s (loc: %x)\n", my_rank, index, locality_str, loc);
     }
 
     rte_finalize ();
