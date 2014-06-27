@@ -65,7 +65,7 @@ int main (int argc, char** argv)
     src = rte_group_index_to_ec(group, my_rank);
     rte_recv(&data, 1, src, 11, group);
 
-    printf ("(%d) received \"%s\" from %d\n", my_rank, r_buf, 0);
+    printf ("(%d) received \"%s\" from %d\n", my_rank, r_buf, my_rank);
 
     rte_finalize ();
 
