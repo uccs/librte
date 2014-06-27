@@ -7,6 +7,7 @@ bin_PROGRAMS += \
     rte_modex_test \
     rte_group_world_test \
     rte_p2p_test \
+    rte_self_test \
     rte_barrier_test
 
 rte_modex_test_SOURCES = tests/comm/modex/modex_test.c
@@ -17,6 +18,9 @@ rte_group_world_test_LDADD = librte.la
 
 rte_p2p_test_SOURCES = tests/comm/p2p/p2p.c
 rte_p2p_test_LDADD = librte.la
+
+rte_self_test_SOURCES = tests/comm/p2p/self.c
+rte_self_test_LDADD = librte.la
 
 ##rte_persistent_request_test_SOURCES = tests/comm/p2p/persistent_request.c
 ##rte_persistent_request_test_LDADD = librte.la
