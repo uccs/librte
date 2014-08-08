@@ -12,7 +12,11 @@
 #ifndef RTE_PMI_INTERNAL_H
 #define RTE_PMI_INTERNAL_H
 
+#include <sys/types.h>
+
 #include "rte_config.h"
+
+extern rte_group_t rte_group_world;
 
 #if HAVE_CRAY_PMI
     typedef struct cray_pmi_proc_s {
@@ -37,6 +41,8 @@
 
 typedef struct rte_pmi_srs_session_s {
     char* name;
+    char* pmi_packed_data;
+    off_t pmi_packed_data_offset;
 } rte_pmi_srs_session_t;
 typedef rte_pmi_srs_session_t *rte_pmi_srs_session_ptr_t;
 
