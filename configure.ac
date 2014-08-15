@@ -113,6 +113,7 @@ AS_IF([test "x$use_orte" != "xno"],
              ],[])
        #dnl set LDFLAGS for the check
        LDFLAGS="-L$orte_lib_path"
+       LIBS="-lopen-pal"
        AC_CHECK_LIB([open-rte], [orte_init])
        AS_IF([test "$ac_cv_lib_open_rte_orte_init" = yes],
              [RTE_CHECK_OPAL_HWLOC_VERSION([rte_orte],[$orte_include_path/openmpi])
@@ -123,7 +124,7 @@ AS_IF([test "x$use_orte" != "xno"],
               rte_orte_cflags+=" -I$orte_include_path/openmpi/$rte_orte_libevent_include_dir/libevent"
               rte_orte_cflags+=" -I$orte_include_path/openmpi/$rte_orte_libevent_include_dir/libevent/include"
               AC_SUBST([LIBRTE_ORTE_CFLAGS],[$rte_orte_cflags])
-              AC_SUBST([LIBRTE_ORTE_LIBADD],["-lopen-rte"])
+              AC_SUBST([LIBRTE_ORTE_LIBADD],["-lopen-rte -lopen-pal"])
               AC_SUBST([LIBRTE_ORTE_LDFLAGS], ["-L$orte_lib_path"])
               AC_DEFINE([HAVE_ORTE], [1], [Define if we have ORTE])
              ],[
