@@ -12,15 +12,19 @@
 #ifndef RTE_PMI_INTERNAL_H
 #define RTE_PMI_INTERNAL_H
 
+#include <sys/types.h>
+
 #include "rte_config.h"
+
+extern rte_group_t rte_group_world;
 
 #if HAVE_CRAY_PMI
     typedef struct cray_pmi_proc_s {
         char* node_name;
     } cray_pmi_proc_t;
 
-    extern cray_pmi_proc_t *rte_pmi_procs;
-    typedef cray_pmi_proc_t rte_pmi_proc_t;
+    extern cray_pmi_proc_t *librte_pmi_procs;
+    typedef cray_pmi_proc_t librte_pmi_proc_t;
 
     #define RTE_WANT_PMI2 1
 #endif
@@ -30,13 +34,15 @@
         char* node_name;
     } slurm_pmi_proc_t;
 
-    extern slurm_pmi_proc_t *rte_pmi_procs;
-    typedef slurm_pmi_proc_t rte_pmi_proc_t;
+    extern slurm_pmi_proc_t *librte_pmi_procs;
+    typedef slurm_pmi_proc_t librte_pmi_proc_t;
     #define RTE_WANT_PMI2 0
 #endif
 
 typedef struct rte_pmi_srs_session_s {
     char* name;
+    char* pmi_packed_data;
+    off_t pmi_packed_data_offset;
 } rte_pmi_srs_session_t;
 typedef rte_pmi_srs_session_t *rte_pmi_srs_session_ptr_t;
 

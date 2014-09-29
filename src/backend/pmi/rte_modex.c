@@ -1,6 +1,7 @@
 /*
- * Copyright (c) 2013       UT-Battelle, LLC. All rights reserved.
- *                          All rights reserved.
+ * Copyright (c) 2012-2013 Los Alamos National Security, LLC.  All rights
+ *                         reserved.
+ * Copyright (c) 2013-2014 UT-Battelle, LLC. All rights reserved.
  *
  * $COPYRIGHT$
  *
@@ -10,14 +11,425 @@
  *
  */
 
-#include "rte.h"
-#include "rte_dt.h"
-#include "rte_pmi_internal.h"
-
 #include <pmi.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <inttypes.h>
+#include <assert.h>
+
+#include "rte.h"
+#include "rte_dt.h"
+#include "rte_pmi_internal.h"
+
+static char *pmi_encode(const void *val, size_t vallen);
+static uint8_t* pmi_decode(const char *data, size_t *retlen);
+
+
+/* Local variables */
+bool rte_pmi_srs_initialized = false;
+
+static char *pmi_kvs_name = NULL;
+static int pmi_vallen_max = -1;
+static int pmi_keylen_max = -1;
+
+static int pmi_pack_key = 0;
+
+static int rte_pmi_srs_setup_pmi(void)
+{
+    int max_length, rc;
+
+#if RTE_WANT_PMI2
+    pmi_vallen_max = PMI2_MAX_VALLEN;
+    max_length = PMI2_MAX_VALLEN;
+#else
+    rc = PMI_KVS_Get_value_length_max(&pmi_vallen_max);
+    if (PMI_SUCCESS != rc) {
+        OPAL_OUTPUT_VERBOSE((1, opal_db_base_framework.framework_output,
+                             "db:pmi:pmi_setup failed %s with error %s",
+                             "PMI_Get_value_length_max",
+                             opal_errmgr_base_pmi_error(rc)));
+        return RTE_ERROR;
+    }
+
+    if (PMI_SUCCESS != (rc = PMI_KVS_Get_name_length_max(&max_length))) {
+        OPAL_OUTPUT_VERBOSE((1, opal_db_base_framework.framework_output,
+                             "db:pmi:pmi_setup failed %s with error %s",
+                             "PMI_KVS_Get_name_length_max",
+                             opal_errmgr_base_pmi_error(rc)));
+        return RTE_ERROR;
+    }
+#endif
+    pmi_kvs_name = (char*)malloc(max_length);
+    if (NULL == pmi_kvs_name) {
+        return RTE_ERROR_OUT_OF_RESOURCE;
+    }
+
+#if RTE_WANT_PMI2
+    rc = PMI2_Job_GetId(pmi_kvs_name, max_length);
+#else
+    rc = PMI_KVS_Get_my_name(pmi_kvs_name,max_length);
+#endif
+    if (PMI_SUCCESS != rc) {
+        fprintf(stderr, "db:pmi:pmi_setup failed %s with error %d on maxlength %d",
+                        "PMI_KVS_Get_my_name", rc, max_length);
+        return RTE_ERROR;
+    }
+
+#if RTE_WANT_PMI2
+    pmi_keylen_max = PMI2_MAX_KEYLEN;
+#else
+    if (PMI_SUCCESS != (rc = PMI_KVS_Get_key_length_max(&pmi_keylen_max))) {
+        fprintf(stderr, "db:pmi:pmi_setup failed %s with error %d",
+                        "PMI_KVS_Get_key_length_max", rc);
+        return RTE_ERROR;
+    }
+#endif
+
+    return RTE_SUCCESS;
+}
+
+static char* setup_key(rte_node_index_t idx, const char *key)
+{
+    char *pmi_kvs_key;
+
+    if (pmi_keylen_max <= asprintf(&pmi_kvs_key, "%" PRIu32 "-%s",
+                                   idx, key)) {
+        free(pmi_kvs_key);
+        return NULL;
+    }
+
+    return pmi_kvs_key;
+}
+
+/* base64 encoding with illegal (to Cray PMI) characters removed ('=' is replaced by ' ') */
+static inline unsigned char pmi_base64_encsym (unsigned char value) {
+    assert (value < 64);
+
+    if (value < 26) {
+        return 'A' + value;
+    } else if (value < 52) {
+        return 'a' + (value - 26);
+    } else if (value < 62) {
+        return '0' + (value - 52);
+    }
+
+    return (62 == value) ? '+' : '/';
+}
+
+static inline unsigned char pmi_base64_decsym (unsigned char value) {
+    if ('+' == value) {
+        return 62;
+    } else if ('/' == value) {
+        return 63;
+    } else if (' ' == value) {
+        return 64;
+    } else if (value <= '9') {
+        return (value - '0') + 52;
+    } else if (value <= 'Z') {
+        return (value - 'A');
+    } else if (value <= 'z') {
+        return (value - 'a') + 26;
+    }
+
+    return 64;
+}
+
+static inline void pmi_base64_encode_block (const unsigned char in[3], char out[4], int len) {
+    out[0] = pmi_base64_encsym (in[0] >> 2);
+    out[1] = pmi_base64_encsym (((in[0] & 0x03) << 4) | ((in[1] & 0xf0) >> 4));
+    /* Cray PMI doesn't allow = in PMI attributes so pad with spaces */
+    out[2] = 1 < len ? pmi_base64_encsym(((in[1] & 0x0f) << 2) | ((in[2] & 0xc0) >> 6)) : ' ';
+    out[3] = 2 < len ? pmi_base64_encsym(in[2] & 0x3f) : ' ';
+}
+
+static inline int pmi_base64_decode_block (const char in[4], unsigned char out[3]) {
+    char in_dec[4];
+
+    in_dec[0] = pmi_base64_decsym (in[0]);
+    in_dec[1] = pmi_base64_decsym (in[1]);
+    in_dec[2] = pmi_base64_decsym (in[2]);
+    in_dec[3] = pmi_base64_decsym (in[3]);
+
+    out[0] = in_dec[0] << 2 | in_dec[1] >> 4;
+    if (64 == in_dec[2]) {
+        return 1;
+    }
+
+    out[1] = in_dec[1] << 4 | in_dec[2] >> 2;
+    if (64 == in_dec[3]) {
+        return 2;
+    }
+
+    out[2] = ((in_dec[2] << 6) & 0xc0) | in_dec[3];
+    return 3;
+}
+
+/* PMI only supports strings. For now, do a simple base64. */
+static char *pmi_encode(const void *val, size_t vallen) {
+    char *outdata, *tmp;
+    size_t i;
+
+    outdata = calloc (((2 + vallen) * 4) / 3 + 2, 1);
+    if (NULL == outdata) {
+        return NULL;
+    }
+
+    for (i = 0, tmp = outdata ; i < vallen ; i += 3, tmp += 4) {
+        pmi_base64_encode_block((unsigned char *) val + i, tmp, vallen - i);
+    }
+
+    /* mark the end of the pmi string */
+    tmp[0] = (unsigned char)'-';
+    tmp[1] = (unsigned char)'\0';
+
+    return outdata;
+}
+
+static uint8_t *pmi_decode (const char *data, size_t *retlen) {
+    size_t input_len = (strlen (data) - 1) / 4;
+    unsigned char *ret;
+    int out_len;
+    size_t i;
+
+    /* default */
+    *retlen = 0;
+
+    ret = calloc (1, 3 * input_len + 1);
+    if (NULL == ret) {
+        return ret;
+    }
+
+    for (i = 0, out_len = 0 ; i < input_len ; i++, data += 4) {
+        out_len += pmi_base64_decode_block(data, ret + 3 * i);
+    }
+
+    ret[out_len] = '\0';
+    *retlen = out_len;
+    return ret;
+}
+
+static int pmi_store_encoded(rte_pmi_srs_session_ptr_t session, const char *key, const rte_iovec_t *data, int elems)
+{
+    int i;
+    size_t data_len = 0;
+    size_t needed;
+
+    int elem_size[elems];
+
+    for (i=0;i<elems;i++) {
+        switch (data[i].type->type) {
+        case rte_pmi_bool:
+        case rte_pmi_int8:
+        case rte_pmi_uint8:
+            elem_size[i] = data[i].count * get_datatype_size(data[i].type);
+            data_len += elem_size[i];
+            break;
+        case rte_pmi_int16:
+        case rte_pmi_uint16:
+            elem_size[i] = data[i].count * get_datatype_size(data[i].type);
+            data_len += elem_size[i];
+            break;
+        case rte_pmi_int32:
+        case rte_pmi_uint32:
+            elem_size[i] = data[i].count * get_datatype_size(data[i].type);
+            data_len += elem_size[i];
+            break;
+        case rte_pmi_int64:
+        case rte_pmi_uint64:
+            elem_size[i]= data[i].count * get_datatype_size(data[i].type);
+            data_len += elem_size[i];
+            break;
+        case rte_pmi_float2:
+            elem_size[i]= data[i].count * get_datatype_size(data[i].type);
+            data_len += elem_size[i];
+            break;
+        }
+    }
+    needed = strlen (key) + 6 + (elems*8) + data_len;
+
+    if (NULL == session->pmi_packed_data) {
+        session->pmi_packed_data = calloc (needed, 1);
+    } else {
+        /* grow the region */
+        session->pmi_packed_data = realloc (session->pmi_packed_data, session->pmi_packed_data_offset + needed);
+    }
+
+    /* serialize the type and the count of the rte_iovec_t elements */
+    session->pmi_packed_data_offset += sprintf (session->pmi_packed_data + session->pmi_packed_data_offset,
+                                    "%s%c%04x%c", key, '\0', elems, '\0');
+    for (i=0;i<elems;i++) {
+	session->pmi_packed_data_offset += sprintf (session->pmi_packed_data + session->pmi_packed_data_offset,
+                                                    "%02x%c%04x%c", data[i].type->type,'\0', (int) data[i].count, '\0');
+    }
+
+    /* finaly, add the data to the buffer */
+    for(i=0;i<elems;i++) {
+        if (NULL != data[i].iov_base) {
+            memmove (session->pmi_packed_data + session->pmi_packed_data_offset, data[i].iov_base, elem_size[i]);
+            session->pmi_packed_data_offset += elem_size[i];
+        }
+    }
+
+    return RTE_SUCCESS;
+}
+
+/* Because Cray uses PMI2 extensions for some, but not all,
+ * PMI functions, we define a set of wrappers for those
+ * common functions we will use
+ */
+static int kvs_put(const char *key, const char *value)
+{
+#if RTE_WANT_PMI2
+    return PMI2_KVS_Put(key, value);
+#else
+    return PMI_KVS_Put(pmi_kvs_name, key, value);
+#endif
+}
+
+static int kvs_get(const char *key, char *value, int valuelen)
+{
+#if RTE_WANT_PMI2
+    int len;
+
+    return PMI2_KVS_Get(pmi_kvs_name, PMI2_ID_NULL, key, value, valuelen, &len);
+#else
+    return PMI_KVS_Get(pmi_kvs_name, key, value, valuelen);
+#endif
+}
+
+static int pmi_commit_packed (rte_pmi_srs_session_ptr_t session) {
+    char *pmikey = NULL, *tmp;
+    char tmp_key[32], save;
+    char *encoded_data;
+    int rc, left, rank;
+    librte_pmi_proc_t *_ec_handle;
+
+    if (NULL == session)
+        return RTE_ERROR_BAD_INPUT;
+
+    if (session->pmi_packed_data_offset == 0) {
+        /* nothing to write */
+        return RTE_SUCCESS;
+    }
+
+    if (NULL == (encoded_data = pmi_encode(session->pmi_packed_data, session->pmi_packed_data_offset))) {
+        return RTE_ERROR_OUT_OF_RESOURCE;
+    }
+    _ec_handle = rte_get_my_ec();
+
+    /* get the rank */
+    rank = _ec_handle - librte_pmi_procs;
+
+    for (left = strlen (encoded_data), tmp = encoded_data ; left ; ) {
+        size_t value_size = pmi_vallen_max > left ? left : pmi_vallen_max - 1;
+
+        sprintf (tmp_key, "key%d", pmi_pack_key);
+
+        if (NULL == (pmikey = setup_key(rank, tmp_key))) {
+            rc = RTE_ERROR_BAD_INPUT;
+            break;
+        }
+
+        /* only write value_size bytes */
+        save = tmp[value_size];
+        tmp[value_size] = '\0';
+
+        rc = kvs_put(pmikey, tmp);
+        free (pmikey);
+        if (PMI_SUCCESS != rc) {
+            rc = RTE_ERROR;
+            fprintf(stderr, "Error commiting key %s\n", pmikey);
+            break;
+        }
+
+        tmp[value_size] = save;
+        tmp += value_size;
+        left -= value_size;
+
+        pmi_pack_key ++;
+
+        rc = RTE_SUCCESS;
+    }
+    if (encoded_data) {
+        free (encoded_data);
+    }
+
+    session->pmi_packed_data_offset = 0;
+    free (session->pmi_packed_data);
+    session->pmi_packed_data = NULL;
+
+    return rc;
+}
+
+static int pmi_get_packed (const rte_node_index_t idx, char **packed_data, size_t *len)
+{
+    char *tmp_encoded = NULL, *pmikey, *pmi_tmp;
+    int remote_key, size;
+    size_t bytes_read;
+    int rc;
+
+    /* set default */
+    *packed_data = NULL;
+    *len = 0;
+
+    pmi_tmp = calloc (pmi_vallen_max, 1);
+    if (NULL == pmi_tmp) {
+        return RTE_ERROR_OUT_OF_RESOURCE;
+    }
+
+    /* read all of the packed data from this proc */
+    for (remote_key = 0, bytes_read = 0 ; ; ++remote_key) {
+        char tmp_key[32];
+
+        sprintf (tmp_key, "key%d", remote_key);
+
+        if (NULL == (pmikey = setup_key(idx, tmp_key))) {
+            rc = RTE_ERROR_OUT_OF_RESOURCE;
+            return rc;
+        }
+
+        rc = kvs_get(pmikey, pmi_tmp, pmi_vallen_max);
+        free (pmikey);
+        if (PMI_SUCCESS != rc) {
+            fprintf(stderr, "error fetching data\n");
+            break;
+        }
+
+        size = strlen (pmi_tmp);
+
+        if (NULL == tmp_encoded) {
+            tmp_encoded = malloc (size + 1);
+        } else {
+            tmp_encoded = realloc (tmp_encoded, bytes_read + size + 1);
+        }
+
+        strcpy (tmp_encoded + bytes_read, pmi_tmp);
+        bytes_read += size;
+
+       /* is the string terminator present? */
+        if ('-' == tmp_encoded[bytes_read-1]) {
+            break;
+        }
+    }
+
+    free (pmi_tmp);
+
+    if (NULL != tmp_encoded) {
+        *packed_data = (char *) pmi_decode (tmp_encoded, len);
+        free (tmp_encoded);
+        if (NULL == *packed_data) {
+            return RTE_ERROR_OUT_OF_RESOURCE;
+        }
+    }
+
+    return RTE_SUCCESS;
+}
+/*
+ * libRTE function implementations
+ *
+ *
+ */
 
 /**
  * @brief Create a srs session
@@ -32,9 +444,15 @@ RTE_PUBLIC int rte_pmi_srs_session_create (rte_group_t group,
                                            int tag,
                                            rte_srs_session_t *session)
 {
-    int rc, max_length;
+    int rc;
+    int max_length;
+
     rte_pmi_srs_session_ptr_t _session = NULL;
-    
+
+    if (!rte_pmi_srs_initialized) {
+    	/* on the first call to session create we set up a few things for pmi */
+        rte_pmi_srs_setup_pmi();
+    }    
     rc = PMI_KVS_Get_name_length_max (&max_length);
     if (PMI_SUCCESS != rc)
         return RTE_ERROR;
@@ -44,16 +462,9 @@ RTE_PUBLIC int rte_pmi_srs_session_create (rte_group_t group,
         return RTE_ERROR_OUT_OF_RESOURCE;
     
     _session->name = NULL;
-    _session->name = malloc (max_length);
-    if (NULL == _session->name)
-        return RTE_ERROR_OUT_OF_RESOURCE;
- 
-    /* for now we get the "local" KVS session*/
-    rc = PMI_KVS_Get_my_name (_session->name, max_length);
-    if (PMI_SUCCESS != rc)
-        return RTE_ERROR;
-
-    printf ("session name: %s\n", _session->name); 
+    _session->name = strdup(pmi_kvs_name);
+    _session->pmi_packed_data = NULL;
+    _session->pmi_packed_data_offset = 0;
 
     *session = _session;
     
@@ -84,11 +495,20 @@ RTE_PUBLIC int rte_pmi_srs_session_destroy (rte_srs_session_t session)
         return RTE_ERROR;
 #endif
     
-    if (NULL != _session->name)
+    if (NULL != _session->name) {
         free (_session->name);
-    
+        _session->name = NULL;
+    }        
+
+    if (NULL != _session->pmi_packed_data) {
+        free(_session->pmi_packed_data);
+        _session->pmi_packed_data = NULL;
+        _session->pmi_packed_data_offset = 0;
+    }
+     
     free (_session);
-    
+    _session = NULL;
+
     return RTE_SUCCESS;
 }
 
@@ -109,13 +529,15 @@ RTE_PUBLIC int rte_pmi_srs_get_data(rte_srs_session_t session,
                                     void **value,
                                     int *size)
 {
-    int max_key_length, actual_key_length, maxvalue, rc, rank, vallen;
-    size_t keysize;
+    int rc, val_size;
     rte_pmi_srs_session_ptr_t _session;
-    rte_pmi_proc_t *_ec_handle;
+    librte_pmi_proc_t *_ec_handle;
     char *value_buffer = NULL;
-    char *_key;
-    
+    size_t val_buf_length, offset;
+    char *_key, *_type, *_elems, *_elem_header, *_data;
+    rte_node_index_t rank;
+    int num_elems, elem_idx;
+    int data_len=0;
     
     if (NULL == session) {
         printf ("session in NULL");
@@ -125,58 +547,68 @@ RTE_PUBLIC int rte_pmi_srs_get_data(rte_srs_session_t session,
     if (NULL == peer) return RTE_ERROR_BAD_INPUT;
 
     _session = (rte_pmi_srs_session_ptr_t)session;
-    _ec_handle = (rte_pmi_proc_t*)peer;
-    
-    rc = PMI_KVS_Get_value_length_max (&maxvalue);
-    if (PMI_SUCCESS != rc) {
-        fprintf (stderr, "PMI_KVS_Get_value_length_max failed (rc = %d)", rc);
-        fflush (stderr);
-        return RTE_ERROR;
-    }
-    
-    rc = PMI_KVS_Get_key_length_max (&max_key_length);
-    if (PMI_SUCCESS != rc) {
-        fprintf (stderr, "PMI_KVS_Get_key_length_max failed (rc = %d)", rc);
-        fflush (stderr);
-        return RTE_ERROR;
-    }
-    
-    /* get the key size */
-    keysize = strlen (key);
-    if (keysize > max_key_length) {
-        fprintf (stderr, "key is to long");
-        fflush (stderr);
-        return RTE_ERROR; /* we might want a seperate error type here */
-    }
-    
+    _ec_handle = (librte_pmi_proc_t*)peer;
     /* get the rank */
-    rank = _ec_handle - rte_pmi_procs;
-    
-    _key = malloc(max_key_length);
-	memset(_key, 0, max_key_length);
-    actual_key_length = sprintf (_key, "%s_%d", key, rank);
-	actual_key_length = strlen(_key);
+    rank = _ec_handle - librte_pmi_procs;
 
-//    fprintf (stderr, "Fetching key %s\n", _key);
-    
-    value_buffer = malloc (maxvalue);
-    if (NULL == value_buffer)
-        return RTE_ERROR_OUT_OF_RESOURCE;
+    pmi_get_packed (rank, &value_buffer, &val_buf_length);
 
-#if RTE_WANT_PMI2 == 0    
-    rc = PMI_KVS_Get (_session->name, _key, value_buffer, maxvalue);
-    if (PMI_SUCCESS != rc) {
-        fprintf (stderr, "PMI_KVS_Get failed (rc = %d)", rc);
-        fflush (stderr);
-        return RTE_ERROR;
+    for (offset = 0 ; offset < val_buf_length && '\0' != value_buffer[offset] ; ) {
+    /* find the key in the stream */
+	_key = value_buffer + offset;
+	/* type is encoded as 2 bytes */
+        _elems = _key + strlen(_key) + 1;
+        num_elems = strtol (_elems, NULL, 16);
+        _elem_header = _elems + strlen(_elems) + 1;
+        _data = _elem_header + 8*num_elems;
+
+        for (elem_idx=0; elem_idx<num_elems;elem_idx++) {
+            rte_pmi_dt_type_t type;
+            int data_count;
+            data_len = 0;
+
+            type = strtol (_elem_header + elem_idx * 8, NULL, 16);
+            data_count = strtol (_elem_header + (elem_idx*8) + 3, NULL, 16);
+
+            switch (type) {
+                case rte_pmi_bool:
+                case rte_pmi_int8:
+                case rte_pmi_uint8:
+                    data_len += data_count * 1;
+                    break;
+                case rte_pmi_int16:
+                case rte_pmi_uint16:
+                    data_len += data_count * 2;
+                    break;
+                case rte_pmi_int32:
+                case rte_pmi_uint32:
+                    data_len += data_count * 4;
+                    break;
+                case rte_pmi_int64:
+                case rte_pmi_uint64:
+                    data_len += data_count * 8;
+                    break;
+                case rte_pmi_float2:
+                    data_len += data_count * 4;
+                    break;
+            }
+	}
+	if (0 == strcmp(_key, key)) {
+            if (val_size == 0xffff) {
+                *value = NULL;
+                *size = 0;
+            } else { 
+                *value = malloc (data_len);
+                memcpy(*value, _data, data_len);
+                *size = data_len;
+            }
+            return RTE_SUCCESS;
+        }
+        
+        offset = (size_t) (_data - value_buffer) + data_len;
+	if (offset >= val_buf_length)
+            return RTE_ERROR_NOT_FOUND;
     }
-    *size = strlen(value_buffer);
-#else
-    rc = PMI2_KVS_Get(rte_pmi2_info.jobid, PMI2_ID_NULL, _key, value_buffer, PMI2_MAX_VALLEN, &vallen);
-    *size = vallen;
-#endif
-
-    *value = value_buffer;
  
     return RTE_SUCCESS;
 }
@@ -200,163 +632,27 @@ RTE_PUBLIC int rte_pmi_srs_set_data (rte_srs_session_t session,
                                      rte_iovec_t *iov,
                                      int iovcnt)
 {
-    int max_key_length, actual_key_length, max_value_length, rc, i, j, rank;
-    size_t datasize = 0, keysize = 0;
-    rte_pmi_srs_session_ptr_t _session;
-    char *value_buffer = NULL;
-    char *value_buffer_ptr = NULL;
-    char *_key;
-    
-    if (NULL == session) {
-        printf ("rte_pmi_srs_set_data: error -> session is NULL\n");
-        return RTE_ERROR_BAD_INPUT;
-    }
-    
-    _session = (rte_pmi_srs_session_ptr_t)session;
-
-    rc = PMI_KVS_Get_value_length_max (&max_value_length);
-    if (PMI_SUCCESS != rc) {
-	printf ("rte_pmi_srs_set_data: error -> can not get max_value_length\n");
-        return RTE_ERROR;
-    }
-
-    rc = PMI_KVS_Get_key_length_max (&max_key_length);
-    if (PMI_SUCCESS != rc) {
-        printf ("rte_pmi_srs_set_data: error -> can not get max_key_length\n");
-        return RTE_ERROR;
-    }
-
-    /* get the key size */
-    keysize = strlen (key);
-    if (keysize > max_key_length) {
-        printf ("rte_pmi_srs_set_data: error -> key to long\n");
-        return RTE_ERROR; /* we might want a seperate error type here */
-    }
-    
-    /* calculate the size of the data */
-    for (i=0; i < iovcnt; i++) {
-        datasize += get_datatype_size(iov[i].type) * iov[i].count;
-    }
-
-//   datasize += 1;
-
-//    if (datasize > max_value_length) {
-//        printf ("rte_pmi_srs_set_data: error -> datasize is to high (%d,%d)\n", datasize, max_value_length);
-//        return RTE_ERROR; /* we might want a seperate error type here */
-//    }
-
-    value_buffer_ptr = value_buffer = malloc (max_value_length);
-    if (NULL == value_buffer)
-        return RTE_ERROR_OUT_OF_RESOURCE;
-    
-    /* get the rank */
-    rc = PMI_Get_rank (&rank);
-    if (PMI_SUCCESS != rc) {
-        printf ("rte_pmi_srs_set_data: error -> can not get rank\n");
-        return RTE_ERROR;
-    }
-
-    _key = malloc(max_key_length);
-	memset(_key, 0, max_key_length);
-    actual_key_length = sprintf (_key, "%s_%d", key, rank);
-	actual_key_length = strlen(_key);
-    
-    if (actual_key_length > max_key_length) {
-        printf ("rte_pmi_srs_set_data: error -> actual key to long\n");
-        return RTE_ERROR; /* TODO: add cleanup */
-    }
-
-    /* by "hand" for now, we might want to put this in a seperate function */
-
-    /* pmi treats the buffer as a strin -> we can not have 0 bytes in there
-       or we will lose data
-     */
-    for (i=0; i < iovcnt; i++) {
-        for (j=0; j < iov[i].count; j++) {
-            int nb;
-            switch (iov[i].type->type) {
-                case rte_pmi_bool:
-                case rte_pmi_int8:
-                    nb = sprintf (value_buffer, "%d,", *(int8_t*)((iov[i].iov_base) + j * get_datatype_size(iov[i].type)));
-                    value_buffer += nb;
-                    break;
-                case rte_pmi_uint8:
-                    nb = sprintf (value_buffer, "%u,", *(uint8_t*)((iov[i].iov_base) + j * get_datatype_size(iov[i].type)));
-                    value_buffer += nb;
-                    break;
-                case rte_pmi_int16:
-                    nb = sprintf (value_buffer, "%d,", *(int16_t*)((iov[i].iov_base) + j * get_datatype_size(iov[i].type)));
-                    value_buffer += nb;
-                    break;
-                case rte_pmi_uint16:
-                    nb = sprintf (value_buffer, "%u,", *(uint16_t*)((iov[i].iov_base) + j * get_datatype_size(iov[i].type)));
-                    value_buffer += nb;
-                    break;
-                case rte_pmi_int32:
-                    nb = sprintf (value_buffer, "%d,", *(int32_t*)((iov[i].iov_base) + j * get_datatype_size(iov[i].type)));
-                    value_buffer += nb;
-                    break;
-                case rte_pmi_uint32:
-                    nb = sprintf (value_buffer, "%u,", *(uint32_t*)((iov[i].iov_base) + j * get_datatype_size(iov[i].type)));
-                    value_buffer += nb;
-                    break;
-                case rte_pmi_int64:
-                    nb = sprintf (value_buffer, "%ld,", *(int64_t*)((iov[i].iov_base) + j * get_datatype_size(iov[i].type)));
-                    value_buffer += nb;
-                    break;
-                case rte_pmi_uint64:
-                    nb = sprintf (value_buffer, "%lu,", *(uint64_t*)((iov[i].iov_base) + j * get_datatype_size(iov[i].type)));
-                    value_buffer += nb;
-                    break;
-                case rte_pmi_float2:
-                    break;
-            }
-        }
-    }
-
-//    printf ("session name: %s, key: %s, value_buffer: %s\n", _session->name, _key, value_buffer_ptr);
-#if RTE_WANT_PMI2 == 0
-    rc = PMI_KVS_Put (_session->name, _key, value_buffer_ptr);
-    if (PMI_SUCCESS != rc) {
-        printf ("rte_pmi_srs_set_data: error -> PMI_KVS_Put failed (rc = %d, PMI_FAIL = %d)\n", rc, PMI_FAIL);
-        return RTE_ERROR;
-    }
-#else
-    rc = PMI2_KVS_Put (_key, value_buffer_ptr);
-    if (PMI_SUCCESS != rc) {
-        printf ("rte_pmi_srs_set_data: error -> PMI_KVS_Put failed (rc = %d, PMI_FAIL = %d)\n", rc, PMI_FAIL);
-        return RTE_ERROR;
-    }
-#endif
-    /* I hope the buffer can be freed here */
-    free (value_buffer_ptr);
-
-    return RTE_SUCCESS;
+    return pmi_store_encoded(session, key, iov, iovcnt); 
 }
 
 RTE_PUBLIC int rte_pmi_srs_exchange_data(rte_srs_session_t session)
 {
-    int rc;
-#if RTE_WANT_PMI2 == 0
-    rte_pmi_srs_session_ptr_t _session = (rte_pmi_srs_session_ptr_t)session;
+    pmi_commit_packed((rte_pmi_srs_session_ptr_t)session);    
     
-    rc = PMI_KVS_Commit (_session->name);
-    if (PMI_SUCCESS != rc) {
-        fprintf (stderr, "rc = %d", rc);
-        fflush (stderr);
-        return RTE_ERROR;
-    }
-
-    rc = PMI_Barrier ();
+#if RTE_WANT_PMI2
+    PMI2_KVS_Fence();
 #else
-    rc = PMI2_KVS_Fence ();
-#endif
-    if (PMI_SUCCESS != rc) {
-        fprintf (stderr, "rc = %d", rc);
-        fflush (stderr);
-        return RTE_ERROR;
+    {
+        int rc;
+
+        if (PMI_SUCCESS != (rc = PMI_KVS_Commit(pmi_kvs_name))) {
+            OPAL_PMI_ERROR(rc, "PMI_KVS_Commit");
+            return;
+        }
+        /* Barrier here to ensure all other procs have committed */
+        PMI_Barrier();
     }
-    
+#endif
     return RTE_SUCCESS;
 }
 

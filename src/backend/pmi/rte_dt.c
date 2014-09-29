@@ -27,16 +27,6 @@ const struct rte_dt_t rte_uint8      = {rte_pmi_uint64, 8};
 const struct rte_dt_t rte_float2     = {rte_pmi_float2, 8};
 const struct rte_dt_t rte_bool       = {rte_pmi_bool, 1};
 
-static int prep_buffer (char* current, char** next)
-{
-    char* tmp;
-
-    tmp = strchr (current, ',');
-    *next = tmp + 1;
-    
-    return RTE_SUCCESS;
-}
-
 int rte_pmi_unpack (rte_iovec_t     *data,
                     void            *src,
                     uint32_t        *offset)
@@ -46,6 +36,8 @@ int rte_pmi_unpack (rte_iovec_t     *data,
     char *base_ptr = NULL;
     char *data_ptr = NULL;
     char* tmp = NULL;
+    uint32_t off = 0;
+
 
     base_ptr = ((char*)(src)) + *offset;
     data_ptr = data->iov_base;
@@ -55,60 +47,38 @@ int rte_pmi_unpack (rte_iovec_t     *data,
             switch (data->type->type) {
                 case rte_pmi_bool:
                 case rte_pmi_int8:
-                    prep_buffer (base_ptr, &tmp);
-                    nb = sscanf (base_ptr, "%d", ((int8_t*)(data_ptr)));
-                    base_ptr = tmp;
-                    data_ptr+=sizeof(int8_t);
-                    break;
                 case rte_pmi_uint8:
-                    prep_buffer (base_ptr, &tmp);
-                    nb = sscanf (base_ptr, "%u", ((uint8_t*)(data_ptr)));
-                    base_ptr = tmp;
-                    data_ptr+=sizeof(uint8_t);
+                    memcpy(data_ptr, base_ptr + off, 1);
+                    data_ptr++;                    
+                    off++;
                     break;
                 case rte_pmi_int16:
-                    prep_buffer (base_ptr, &tmp);
-                    nb = sscanf (base_ptr, "%d", ((int16_t*)(data_ptr)));
-                    base_ptr = tmp;
-                    data_ptr+=sizeof(int16_t);
-                    break;
                 case rte_pmi_uint16:
-                    prep_buffer (base_ptr, &tmp);
-                    nb = sscanf (base_ptr, "%u", ((uint16_t*)(data_ptr)));
-                    base_ptr = tmp;
-                    data_ptr+=sizeof(uint16_t);
+                    memcpy(data_ptr, base_ptr + off, 2);
+                    data_ptr += 2;                    
+                    off += 2;
                     break;
                 case rte_pmi_int32:
-                    prep_buffer (base_ptr, &tmp);
-                    nb = sscanf (base_ptr, "%d", ((int32_t*)(data_ptr)));
-                    base_ptr = tmp;
-                    data_ptr+=sizeof(int32_t);
-                    break;
                 case rte_pmi_uint32:
-                    prep_buffer (base_ptr, &tmp);
-                    nb = sscanf (base_ptr, "%u", ((uint32_t*)(data_ptr)));
-                    base_ptr = tmp;
-                    data_ptr+=sizeof(uint32_t);
+                    memcpy(data_ptr, base_ptr + off, 4);
+                    data_ptr +=4;                    
+                    off += 4;
                     break;
                 case rte_pmi_int64:
-                    prep_buffer (base_ptr, &tmp);
-                    nb = sscanf (base_ptr, "%ld", ((int64_t*)(data_ptr)));
-                    base_ptr = tmp;
-                    data_ptr+=sizeof(int64_t);
-                    break;
                 case rte_pmi_uint64:
-                    prep_buffer (base_ptr, &tmp);
-                    nb = sscanf (base_ptr, "%lu", ((uint64_t*)(data_ptr)));
-                    base_ptr = tmp;
-                    data_ptr+=sizeof(uint64_t);
+                    memcpy(data_ptr, base_ptr + off, 8);
+                    data_ptr += 8;                    
+                    off =+ 8;
                     break;
                 case rte_pmi_float2:
+                    memcpy(data_ptr, base_ptr + off, 4);
+                    data_ptr += 4;                    
+                    off += 4;
                     break;
             }
         }
 
-
-    *offset = base_ptr - (char*)src;
+    (*offset) += off;
 
     return rc;
 }
