@@ -303,7 +303,7 @@ static int pmi_commit_packed (rte_pmi_srs_session_ptr_t session) {
     char tmp_key[32], save;
     char *encoded_data;
     int rc, left, rank;
-    rte_pmi_proc_t *_ec_handle;
+    librte_pmi_proc_t *_ec_handle;
 
     if (NULL == session)
         return RTE_ERROR_BAD_INPUT;
@@ -319,7 +319,7 @@ static int pmi_commit_packed (rte_pmi_srs_session_ptr_t session) {
     _ec_handle = rte_get_my_ec();
 
     /* get the rank */
-    rank = _ec_handle - rte_pmi_procs;
+    rank = _ec_handle - librte_pmi_procs;
 
     for (left = strlen (encoded_data), tmp = encoded_data ; left ; ) {
         size_t value_size = pmi_vallen_max > left ? left : pmi_vallen_max - 1;
@@ -531,7 +531,7 @@ RTE_PUBLIC int rte_pmi_srs_get_data(rte_srs_session_t session,
 {
     int rc, val_size;
     rte_pmi_srs_session_ptr_t _session;
-    rte_pmi_proc_t *_ec_handle;
+    librte_pmi_proc_t *_ec_handle;
     char *value_buffer = NULL;
     size_t val_buf_length, offset;
     char *_key, *_type, *_elems, *_elem_header, *_data;
@@ -547,9 +547,9 @@ RTE_PUBLIC int rte_pmi_srs_get_data(rte_srs_session_t session,
     if (NULL == peer) return RTE_ERROR_BAD_INPUT;
 
     _session = (rte_pmi_srs_session_ptr_t)session;
-    _ec_handle = (rte_pmi_proc_t*)peer;
+    _ec_handle = (librte_pmi_proc_t*)peer;
     /* get the rank */
-    rank = _ec_handle - rte_pmi_procs;
+    rank = _ec_handle - librte_pmi_procs;
 
     pmi_get_packed (rank, &value_buffer, &val_buf_length);
 
@@ -565,6 +565,7 @@ RTE_PUBLIC int rte_pmi_srs_get_data(rte_srs_session_t session,
         for (elem_idx=0; elem_idx<num_elems;elem_idx++) {
             rte_pmi_dt_type_t type;
             int data_count;
+            data_len = 0;
 
             type = strtol (_elem_header + elem_idx * 8, NULL, 16);
             data_count = strtol (_elem_header + (elem_idx*8) + 3, NULL, 16);
@@ -592,7 +593,6 @@ RTE_PUBLIC int rte_pmi_srs_get_data(rte_srs_session_t session,
                     break;
             }
 	}
-
 	if (0 == strcmp(_key, key)) {
             if (val_size == 0xffff) {
                 *value = NULL;
@@ -605,7 +605,9 @@ RTE_PUBLIC int rte_pmi_srs_get_data(rte_srs_session_t session,
             return RTE_SUCCESS;
         }
         
-        offset = (size_t) (_data - value_buffer) + val_size;
+        offset = (size_t) (_data - value_buffer) + data_len;
+	if (offset >= val_buf_length)
+            return RTE_ERROR_NOT_FOUND;
     }
  
     return RTE_SUCCESS;

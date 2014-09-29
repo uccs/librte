@@ -26,6 +26,6 @@ RTE_PUBLIC rte_node_index_t rte_pmi_get_ec_index(rte_group_t     group,
     slurm_pmi_proc_t *_ec_handle = (slurm_pmi_proc_t*)ec_handle; 
 #endif
 
-    return _ec_handle - rte_pmi_procs;
+    return _ec_handle - librte_pmi_procs;
 }
 

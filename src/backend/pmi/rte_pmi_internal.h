@@ -23,8 +23,8 @@ extern rte_group_t rte_group_world;
         char* node_name;
     } cray_pmi_proc_t;
 
-    extern cray_pmi_proc_t *rte_pmi_procs;
-    typedef cray_pmi_proc_t rte_pmi_proc_t;
+    extern cray_pmi_proc_t *librte_pmi_procs;
+    typedef cray_pmi_proc_t librte_pmi_proc_t;
 
     #define RTE_WANT_PMI2 1
 #endif
@@ -34,8 +34,8 @@ extern rte_group_t rte_group_world;
         char* node_name;
     } slurm_pmi_proc_t;
 
-    extern slurm_pmi_proc_t *rte_pmi_procs;
-    typedef slurm_pmi_proc_t rte_pmi_proc_t;
+    extern slurm_pmi_proc_t *librte_pmi_procs;
+    typedef slurm_pmi_proc_t librte_pmi_proc_t;
     #define RTE_WANT_PMI2 0
 #endif
 
