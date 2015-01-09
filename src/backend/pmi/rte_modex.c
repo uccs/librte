@@ -565,7 +565,6 @@ RTE_PUBLIC int rte_pmi_srs_get_data(rte_srs_session_t session,
         for (elem_idx=0; elem_idx<num_elems;elem_idx++) {
             rte_pmi_dt_type_t type;
             int data_count;
-            data_len = 0;
 
             type = strtol (_elem_header + elem_idx * 8, NULL, 16);
             data_count = strtol (_elem_header + (elem_idx*8) + 3, NULL, 16);
@@ -593,6 +592,7 @@ RTE_PUBLIC int rte_pmi_srs_get_data(rte_srs_session_t session,
                     break;
             }
 	}
+
 	if (0 == strcmp(_key, key)) {
             if (val_size == 0xffff) {
                 *value = NULL;
