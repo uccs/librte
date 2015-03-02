@@ -81,13 +81,13 @@ AC_ARG_WITH([pmi],
 
 AC_ARG_WITH([pmi-lib],
     [AS_HELP_STRING([--with-pmi-lib],
-                   [specify the path to the stci library])],
+                   [specify the path to the pmi library])],
     [use_pmi_lib=$withval],
     [use_pmi_lib=no])
 
 AC_ARG_WITH([pmi-include],
     [AS_HELP_STRING([--with-pmi-include],
-                   [specify the path to the stci include headers])],
+                   [specify the path to the pmi include headers])],
     [use_pmi_include=$withval],
     [use_pmi_include=no])
 
