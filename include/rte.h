@@ -312,11 +312,11 @@ RTE_PUBLIC int rte_get_ec_locality(rte_ec_handle_t ec_handle);
 
 /**
  * @brief Compare two execution contexts.
- * @detail This function is used to compare two execution contexts.
- *         It will return 0 if the provided execution contexts are the
- *         same. Otherwise it will return 1 if the index of the first
- *         handle is greater then the second and -1 if the handle is
- *         smaller.
+ * @details This function is used to compare two execution contexts.
+ *          It will return 0 if the provided execution contexts are the
+ *          same. Otherwise it will return 1 if the index of the first
+ *          handle is greater then the second and -1 if the handle is
+ *          smaller.
  *
  * @param[in] ec_handle_one The first handle to an execution context.
  * @param[in] ec_handle_two The second handle to an execution context.
@@ -675,6 +675,9 @@ typedef char * rte_srs_key_t;
 /**
  * @brief Create a srs session
  *
+ * @details Creates a session for SRS. A session limites the data
+ * exchange to the members of the group.
+ *
  * @param[in]     group    The group this session is limited to.
  * @param[in]     tag      An arbitrary tag.
  * @param[in,out] session  A pointer to the session the session object.
@@ -687,7 +690,9 @@ RTE_PUBLIC int rte_srs_session_create(rte_group_t group,
                                       rte_srs_session_t *session);
 
 /**
- * @brief destroy a previously created srs session
+ * @brief Destroy a previously created srs session.
+ *
+ * @details Frees the memory allocated with the session.
  *
  * @param[in,out] session  pointer to the session the session object
  *
@@ -698,6 +703,9 @@ RTE_PUBLIC int rte_srs_session_destroy(rte_srs_session_t session);
 
 /**
  * @brief blocking call to request for a key/value pair from a session
+ *
+ * @details The function retrieves the data from the session store and
+ * copies it into the buffer pointed to by value.
  *
  * @param[in]  session  NULL for global exchange, rte_srs_session_t for
  *                      scoped exchange.
@@ -718,6 +726,9 @@ RTE_PUBLIC int rte_srs_get_data(rte_srs_session_t session,
 /**
  * @brief blocking call to register a key/value pair with a session
  *
+ * @details This function adds the key/value pair to the session store.
+ * The data will be exchanged by calling srs_exchange_data.
+ *
  * @note If the key provided already is registered with the session
  *       RTE_ERR_DUPLICATE_KEY is returned.
  *
@@ -737,6 +748,11 @@ RTE_PUBLIC int rte_srs_set_data(rte_srs_session_t session,
 
 /**
  * @brief Exchange the data in the SRS cache.
+ *
+ * @details This function will ultimately exchange the data in the
+ * session store. It acts like a synchronisation point. After the
+ * function was called, data can be read from the session store by using
+ * rts_srs_get_data.
  *
  * @param[in]  session  NULL for global exchange, rte_srs_session_t for
  *                      scoped exchange
