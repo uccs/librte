@@ -1,5 +1,8 @@
 /*
- * Copyright (c) 2011-2013  Oak Rigde National Laboratory
+ * Copyright (c) 2011-2014  UT-Batelle LLC
+ *                          All rights reserved.
+ *
+ * Copyright (c) 2011-2014  Oak Rigde National Laboratory
  *                          All rights reserved.
  *
  * $COPYRIGHT$
@@ -219,19 +222,27 @@ RTE_PUBLIC int rte_finalize(void);
  * @brief RTE agent abort
  * @details This function aborts the current execution context and
  *          possibly the application.
- *          Note: Aborting the application is not guaranteed. This
- *          depends on the back end. Instead of aborting the application
- *          a back end implementation might notify the other ECs.
+ * @note Aborting the application is not guaranteed. This
+ *       depends on the back end. Instead of aborting the application
+ *       a back end implementation might notify the other ECs.
  *
  * @return RTE_SUCCESS On successful initialization.
  * @return RTE_ERROR On error.
  */
 RTE_PUBLIC void rte_abort(int error_code, char *exit_description, ...);
 
+
+/**
+ * @brief Get the agents job id.
+ * @details The function returns the job id for the current application.
+ *
+ * @return job id
+ */
 RTE_PUBLIC uint32_t rte_get_job_id (void);
 
 /**
  * @brief Return handle to the calling processes/threads execution context
+ * @details Returns the execution context for the current process.
  *
  * @return The rte_ec_handle_t of the calling process.
  */
@@ -239,6 +250,9 @@ RTE_PUBLIC rte_ec_handle_t rte_get_my_ec(void);
 
 /**
  * @brief Group index to execution context translation
+ * @detais Function to translate the group index of a process to the
+ *         corresponding execution context.
+ *
  *
  * @param[in]  group  The group to query the execution context from.
  * @param[in]  index  The index of the execution context in the group.
@@ -250,6 +264,8 @@ RTE_PUBLIC rte_ec_handle_t rte_group_index_to_ec(rte_group_t group,
 
 /**
  * @brief Return the size of the given group
+ * @details The function returns the number of execution contexts in the
+ *          given group.
  *
  * @param[in]  group  The group to query for its size.
  *
@@ -259,6 +275,8 @@ RTE_PUBLIC int rte_group_size(rte_group_t group);
 
 /**
  * @brief Get the rank in a given group.
+ * @details The function returns the position of the calling process in
+ *          the group supplied to the function call.
  *
  * @param[in]  group  The group to query for its size.
  *
@@ -286,11 +304,19 @@ RTE_PUBLIC extern const int RTE_PROC_ALL_LOCAL;
 
 /**
  * @brief Return the locality of a given execution context.
+ *
+ *
+ * @return 
  */
 RTE_PUBLIC int rte_get_ec_locality(rte_ec_handle_t ec_handle);
 
 /**
  * @brief Compare two execution contexts.
+ * @detail This function is used to compare two execution contexts.
+ *         It will return 0 if the provided execution contexts are the
+ *         same. Otherwise it will return 1 if the index of the first
+ *         handle is greater then the second and -1 if the handle is
+ *         smaller.
  *
  * @param[in] ec_handle_one The first handle to an execution context.
  * @param[in] ec_handle_two The second handle to an execution context.
@@ -306,6 +332,8 @@ RTE_PUBLIC int rte_cmp_ec(rte_ec_handle_t ec_handle_one,
 
 /**
  * @brief Get the execution contexts index in a group.
+ * @details This function is used to query a execution contexts index in
+ *          the given group.
  *
  * @param[in] group      The group handle.
  * @param[in] ec_handle  The EC handle.
@@ -317,6 +345,8 @@ RTE_PUBLIC rte_node_index_t rte_get_ec_index(rte_group_t group,
 
 /**
  * @brief Get the node name for an EC.
+ * @details This function is used to return the compute nodes name
+ *          to the caller.
  *
  * @param[in] ec_handle  The EC handle.
  *
@@ -329,6 +359,7 @@ RTE_PUBLIC char * rte_get_ec_node_name(rte_ec_handle_t ec_handle);
 
 /**
  * @brief Get the unique node identifier for an EC.
+ * @details This function returns the node id of the compute node.
  *
  * @param[in] ec_handle  The EC handle.
  *
@@ -338,6 +369,8 @@ RTE_PUBLIC uint32_t rte_get_ec_node_id(rte_ec_handle_t ec_handle);
 
 /**
  * @brief Get the hostname for an EC.
+ * @details This function is used to return the compute nodes hostname
+ *          to the caller.
  *
  * @param[in] ec_handle  The EC handle.
  *
@@ -348,6 +381,8 @@ RTE_PUBLIC char * rte_get_ec_hostname(rte_ec_handle_t ec_handle);
 
 /**
  * @brief  Get path to session directory.
+ * @details The function returns the path to the session directory
+ *          associated with the application.
  *
  * @return A pointer to a string holding the full path to applications
  *         session directory
@@ -366,6 +401,10 @@ RTE_PUBLIC extern const int RTE_RECV_REQUEST_PERSISTENT;
 
 /**
  * @brief Cancel an outstanding non blocking send/receive operation.
+ * @details The function is used to cancel an outstanding request.
+ *          This only applies to non-blocking and persistent receive
+ *          operations. The persistent operation is identified by the
+ *          peer and the tag associated with it.
  *
  * @param[in] peer The peer the outstanding send/receive is for
  * @param[in] tag  The tag qualifying the send/receive operation.
@@ -380,10 +419,19 @@ RTE_PUBLIC int rte_cancel(rte_ec_handle_t  peer, int tag);
 
 /**
  * @brief Unpack data into a user defined buffer.
+ * @details A receive operation returns a buffer to the packed data. To
+ *          access the data in the buffer it has to be unpacked.
+ *          The unpack function takes a description of the data, a
+ *          pointer to the buffer and a pointer to the offset in the
+ *          buffer being unpacked. The offset needs to be initialized
+ *          with 0 for the first call to unpack on the according buffer.
+ *          The unpack places the data into the buffer pointed to by the
+ *          tlv. The offset increments by the number of bytes read from
+ *          the input buffer.
  *
- * @param data
- * @param src
- * @param offset
+ * @param[in/out] data
+ * @param[in]     src
+ * @param[in/out] offset
  *
  * @return RTE_SUCCESS On success.
  * @return RTE_ERROR On error.
@@ -410,6 +458,12 @@ RTE_PUBLIC extern rte_ec_handle_t RTE_ANYSOURCE;
 
 /**
  * @brief Blocking receive
+ * @details This function is a blocking receive operation. The receive 
+ *          takes an array of tlvs and the number of elements in the
+ *          array as input parameters as well as the source, a tag and
+ *          the group for the receive operation.
+ *          Upon successful completion the iovs are containing the
+ *          received data.
  *
  * @param[in] iov    Array of rte_iovec_t data elements.
  * @param[in] count  Number of elements in iovec array.
@@ -427,6 +481,13 @@ RTE_PUBLIC int rte_recv(rte_iovec_t *iov,
                         rte_group_t group);
 /**
  * @brief Start a non blocking receive.
+ * @details A non blocking receive is posted based on the source and the
+ *          tag field. The flags are used to specify a persistent or a
+ *          non persistent request. While a non-persistent request is
+ *          matched only once, a persistent request stays active until
+ *          it is canceled.
+ *          Once the received is matched, the callback function supplied
+ *          is called.
  *
  * @param[in] source  The source of the message.
  * @param[in] tag     The message tag.
@@ -450,6 +511,10 @@ RTE_PUBLIC int rte_recv_nbcb(rte_ec_handle_t source,
                              void * cb_data);
 /**
  * @brief Blocking send
+ * @details The blocking send operation sends the data provided in an
+ *          array of iovs to the destination specified by the ec handle.
+ *          The tag is used for the matching of the message on the
+ *          receiving side.
  *
  * @param[in] iov    Array of rte_iovec_t data elements.
  * @param[in] count  Number of elements in iovec array.
@@ -468,6 +533,7 @@ RTE_PUBLIC int rte_send(rte_iovec_t *iov,
 
 /**
  * @brief Start a non-blocking send.
+ * @details
  *
  * @param[in] iov     Array of rte_iovec_t data elements.
  * @param[in] count   Number of elements in iovec array.
@@ -495,6 +561,9 @@ RTE_PUBLIC int rte_send_nbcb(rte_iovec_t *iov,
 
 /**
  * @brief Barrier function
+ * @details The barrier function is used to synchronize all the
+ *          execution contexts in the group. All execution contexts in
+ *          the goup must participate in this call.
  *
  * @param[in] group                the group to synchronize
  *
@@ -677,6 +746,11 @@ RTE_PUBLIC int rte_srs_set_data(rte_srs_session_t session,
  */
 RTE_PUBLIC int rte_srs_exchange_data(rte_srs_session_t session);
 
+/**
+ * @brief Progress the run-time environment.
+ * @details This function provides a way to progress the runtime
+ *          environment needs to be progressed explicitly.
+ */
 RTE_PUBLIC void rte_progress(void);
 
 /** @} */ /* end group srs */
