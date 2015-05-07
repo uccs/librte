@@ -89,12 +89,12 @@ static int rte_pmi_srs_setup_pmi(void)
     return RTE_SUCCESS;
 }
 
-static char* setup_key(rte_node_index_t idx, const char *key)
+static char* setup_key(int session_no, rte_node_index_t idx, const char *key)
 {
     char *pmi_kvs_key;
 
-    if (pmi_keylen_max <= asprintf(&pmi_kvs_key, "%" PRIu32 "-%s",
-                                   idx, key)) {
+    if (pmi_keylen_max <= asprintf(&pmi_kvs_key, "%d-%" PRIu32 "-%s",
+                                   session_no, idx, key)) {
         free(pmi_kvs_key);
         return NULL;
     }
@@ -302,7 +302,7 @@ static int pmi_commit_packed (rte_pmi_srs_session_ptr_t session) {
     char *pmikey = NULL, *tmp;
     char tmp_key[32], save;
     char *encoded_data;
-    int rc, left, rank;
+    int rc, left, rank, i;
     librte_pmi_proc_t *_ec_handle;
 
     if (NULL == session)
@@ -313,7 +313,8 @@ static int pmi_commit_packed (rte_pmi_srs_session_ptr_t session) {
         return RTE_SUCCESS;
     }
 
-    if (NULL == (encoded_data = pmi_encode(session->pmi_packed_data, session->pmi_packed_data_offset))) {
+    if (NULL == (encoded_data = pmi_encode(session->pmi_packed_data,
+                                           session->pmi_packed_data_offset))) {
         return RTE_ERROR_OUT_OF_RESOURCE;
     }
     _ec_handle = rte_get_my_ec();
@@ -321,12 +322,13 @@ static int pmi_commit_packed (rte_pmi_srs_session_ptr_t session) {
     /* get the rank */
     rank = _ec_handle - librte_pmi_procs;
 
-    for (left = strlen (encoded_data), tmp = encoded_data ; left ; ) {
+    for (left = strlen (encoded_data), tmp = encoded_data, i = 0 ; left ; ) {
         size_t value_size = pmi_vallen_max > left ? left : pmi_vallen_max - 1;
 
-        sprintf (tmp_key, "key%d", pmi_pack_key);
+        sprintf (tmp_key, "key%d", i);
+        session->session_no = pmi_pack_key;
 
-        if (NULL == (pmikey = setup_key(rank, tmp_key))) {
+        if (NULL == (pmikey = setup_key(session->session_no, rank, tmp_key))) {
             rc = RTE_ERROR_BAD_INPUT;
             break;
         }
@@ -347,8 +349,6 @@ static int pmi_commit_packed (rte_pmi_srs_session_ptr_t session) {
         tmp += value_size;
         left -= value_size;
 
-        pmi_pack_key ++;
-
         rc = RTE_SUCCESS;
     }
     if (encoded_data) {
@@ -359,16 +359,24 @@ static int pmi_commit_packed (rte_pmi_srs_session_ptr_t session) {
     free (session->pmi_packed_data);
     session->pmi_packed_data = NULL;
 
+    /* increase the session no */
+    pmi_pack_key++;
+
     return rc;
 }
 
-static int pmi_get_packed (const rte_node_index_t idx, char **packed_data, size_t *len)
+static int
+pmi_get_packed (const rte_node_index_t idx, rte_srs_session_t session,
+                char **packed_data, size_t *len)
 {
     char *tmp_encoded = NULL, *pmikey, *pmi_tmp;
-    int remote_key, size;
+    int remote_key = 0, size;
     size_t bytes_read;
     int rc;
 
+    rte_pmi_srs_session_ptr_t _session = (rte_pmi_srs_session_ptr_t)session;
+
+    char *pmi_key;
     /* set default */
     *packed_data = NULL;
     *len = 0;
@@ -379,12 +387,12 @@ static int pmi_get_packed (const rte_node_index_t idx, char **packed_data, size_
     }
 
     /* read all of the packed data from this proc */
+    char tmp_key[32];
+
     for (remote_key = 0, bytes_read = 0 ; ; ++remote_key) {
-        char tmp_key[32];
 
         sprintf (tmp_key, "key%d", remote_key);
-
-        if (NULL == (pmikey = setup_key(idx, tmp_key))) {
+        if (NULL == (pmikey = setup_key(_session->session_no, idx, tmp_key))) {
             rc = RTE_ERROR_OUT_OF_RESOURCE;
             return rc;
         }
@@ -393,9 +401,7 @@ static int pmi_get_packed (const rte_node_index_t idx, char **packed_data, size_
         free (pmikey);
         if (PMI_SUCCESS != rc) {
             fprintf(stderr, "error fetching data\n");
-            break;
         }
-
         size = strlen (pmi_tmp);
 
         if (NULL == tmp_encoded) {
@@ -551,7 +557,7 @@ RTE_PUBLIC int rte_pmi_srs_get_data(rte_srs_session_t session,
     /* get the rank */
     rank = _ec_handle - librte_pmi_procs;
 
-    pmi_get_packed (rank, &value_buffer, &val_buf_length);
+    pmi_get_packed (rank, session, &value_buffer, &val_buf_length);
 
     for (offset = 0 ; offset < val_buf_length && '\0' != value_buffer[offset] ; ) {
     /* find the key in the stream */

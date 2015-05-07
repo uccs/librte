@@ -43,6 +43,7 @@ typedef struct rte_pmi_srs_session_s {
     char* name;
     char* pmi_packed_data;
     off_t pmi_packed_data_offset;
+    int session_no;
 } rte_pmi_srs_session_t;
 typedef rte_pmi_srs_session_t *rte_pmi_srs_session_ptr_t;
 
