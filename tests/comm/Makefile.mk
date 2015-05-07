@@ -8,7 +8,11 @@ bin_PROGRAMS += \
     rte_group_world_test \
     rte_p2p_test \
     rte_self_test \
-    rte_barrier_test
+    rte_barrier_test \
+    rte_modex_test_multiple_sessions
+
+rte_modex_test_multiple_sessions_SOURCES = tests/comm/modex/modex_test_multiple_sessions.c
+rte_modex_test_multiple_sessions_LDADD = librte.la
 
 rte_modex_test_SOURCES = tests/comm/modex/modex_test.c
 rte_modex_test_LDADD = librte.la
